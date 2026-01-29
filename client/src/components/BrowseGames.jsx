@@ -16,8 +16,8 @@ const BrowseGames = ({ addToCart, library }) => {
                 axios.get('/api/games?limit=20'),
                 axios.get('/api/categories')
             ]);
-            setGames(gamesRes.data.data.games);
-            setCategories(catsRes.data.data);
+            setGames(gamesRes.data?.data?.games || []);
+            setCategories(catsRes.data?.data || []);
         } catch (err) {
             console.error(err);
         } finally {

@@ -40,7 +40,7 @@ const Hero = ({ directPurchase }) => {
         try {
             // Fetch random games or top rated
             const res = await axios.get('/api/games?limit=5');
-            const games = res.data.data.games;
+            const games = res.data?.data?.games || [];
             
             if (games.length > 0) {
                 // Shuffle array to get random games on refresh

@@ -88,10 +88,11 @@ const Home = ({ addToCart, user, directPurchase, library }) => {
       if (sort) url += `&sort=${sort}`;
       
       const res = await axios.get(url);
-      setGames(res.data.data.games);
-      setTotalPages(res.data.data.meta.totalPages);
+      setGames(res.data?.data?.games || []);
+      setTotalPages(res.data?.data?.meta?.totalPages || 1);
     } catch (err) {
       console.error(err);
+      setGames([]);
     } finally {
       setLoading(false);
     }
