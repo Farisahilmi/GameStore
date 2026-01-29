@@ -17,7 +17,7 @@ const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications 
 
   useEffect(() => {
       const searchUsers = async () => {
-          if (userSearchTerm.length < 2) {
+          if (!userSearchTerm || userSearchTerm.length < 2) {
               setUserSearchResults([]);
               return;
           }
@@ -80,7 +80,8 @@ const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications 
     }
   }, [user]);
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  const safeNotifications = Array.isArray(notifications) ? notifications : [];
+  const unreadCount = safeNotifications.filter(n => !n.isRead).length;
 
   const markAsRead = async (id) => {
     try {
@@ -88,7 +89,7 @@ const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications 
         await axios.put(`/api/notifications/${id}/read`, {}, {
             headers: { Authorization: `Bearer ${token}` }
         });
-        setNotifications(notifications.map(n => n.id === id ? { ...n, isRead: true } : n));
+        setNotifications(safeNotifications.map(n => n.id === id ? { ...n, isRead: true } : n));
     } catch (err) {
         console.error(err);
     }
@@ -244,10 +245,10 @@ const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications 
                                     {unreadCount > 0 && <span className="text-[10px] bg-steam-accent px-1.5 py-0.5 rounded text-white">{unreadCount} New</span>}
                                 </div>
                                 <div className="max-h-96 overflow-y-auto">
-                                    {notifications.length === 0 ? (
+                                    {safeNotifications.length === 0 ? (
                                         <div className="p-8 text-center text-gray-500 text-sm italic">No notifications yet</div>
                                     ) : (
-                                        notifications.map(n => (
+                                        safeNotifications.map(n => (
                                             <div 
                                                 key={n.id} 
                                                 onClick={() => markAsRead(n.id)}
