@@ -28,7 +28,12 @@ const apiKeyMiddleware = require('./middlewares/apiKeyMiddleware');
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:5173', // Local Dev
+    process.env.FRONTEND_URL // Production URL (from Env Var)
+  ]
+}));
 app.use(express.json());
 app.use(morgan('dev'));
 app.use('/uploads', express.static('uploads')); // Serve uploaded files statically

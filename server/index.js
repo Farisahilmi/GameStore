@@ -7,7 +7,10 @@ const PORT = process.env.PORT || 3000;
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: '*', // In production, restrict this to your frontend URL
+    origin: [
+      'http://localhost:5173', // Local Dev
+      process.env.FRONTEND_URL // Production URL (from Env Var)
+    ],
     methods: ['GET', 'POST']
   }
 });

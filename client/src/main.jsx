@@ -4,7 +4,10 @@ import App from './App.jsx'
 import './index.css'
 import axios from 'axios'
 
-// Set default API Key for all requests
+// Set API URL based on environment
+// In development, Vite proxy handles /api. In production, we use the full URL.
+const apiUrl = import.meta.env.VITE_API_URL || ''; 
+axios.defaults.baseURL = apiUrl;
 axios.defaults.headers.common['x-api-key'] = '30035be176e0448bb45ce782377409ce';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
