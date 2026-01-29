@@ -5,8 +5,7 @@ import './index.css'
 import axios from 'axios'
 
 // Set API URL based on environment
-// In development, Vite proxy handles /api. In production, we use the full URL.
-const apiUrl = import.meta.env.VITE_API_URL || ''; 
+const apiUrl = import.meta.env.VITE_API_URL || 'https://gamestore-production.up.railway.app'; 
 axios.defaults.baseURL = apiUrl;
 axios.defaults.headers.common['x-api-key'] = '30035be176e0448bb45ce782377409ce';
 
