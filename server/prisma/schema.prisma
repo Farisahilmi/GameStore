@@ -1,0 +1,239 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+// SQLite doesn't support enums natively, but Prisma simulates them at application level
+// or we can use String and validate in code.
+// However, Prisma SQLite provider doesn't support enums in schema. 
+// We should change Enums to String for SQLite compatibility or let Prisma handle it if supported (Prisma handles enums in SQLite by mapping to string, but schema syntax is stricter).
+// Wait, Prisma + SQLite DOES NOT support enum. I should change them to String.
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String?
+  role      String   @default("USER") // USER, ADMIN, PUBLISHER
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  publishedGames Game[]        @relation("PublisherGames")
+  transactions   Transaction[]
+  library        Library[]
+  wishlist       Wishlist[]
+  reviews        Review[]
+  notifications  Notification[]
+  devProjects    DevProject[]
+  following      Follow[]      @relation("UserFollowing")
+  followers      Follow[]      @relation("PublisherFollowers")
+  reviewVotes    ReviewVote[]
+  devComments    DevProjectComment[]
+  friends        Friend[]      @relation("UserFriends")
+  friendOf       Friend[]      @relation("UserFriendOf")
+  activities     Activity[]
+  giftsReceived  Transaction[] @relation("GiftRecipient")
+}
+
+model Game {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  price       Decimal  @default(0)
+  discount    Int      @default(0) // Discount percentage (0-100) by Publisher
+  imageUrl    String?
+  releaseDate DateTime @default(now())
+  publisherId Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  publisher    User?         @relation("PublisherGames", fields: [publisherId], references: [id])
+  transactions Transaction[]
+  inLibraries  Library[]
+  inWishlists  Wishlist[]
+  reviews      Review[]
+  categories   Category[]
+  updates      GameUpdate[]
+}
+
+model DevProject {
+  id          Int      @id @default(autoincrement())
+  publisherId Int
+  title       String
+  status      String   @default("CONCEPT") // CONCEPT, IN_DEVELOPMENT, ALPHA, BETA, RELEASED
+  progress    Int      @default(0) // 0-100
+  lastUpdate  DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  // Relations
+  publisher User @relation(fields: [publisherId], references: [id])
+  comments  DevProjectComment[]
+}
+
+model Follow {
+  id          Int      @id @default(autoincrement())
+  userId      Int      // The user who follows
+  publisherId Int      // The publisher being followed
+  createdAt   DateTime @default(now())
+
+  // Relations
+  user      User @relation("UserFollowing", fields: [userId], references: [id])
+  publisher User @relation("PublisherFollowers", fields: [publisherId], references: [id])
+
+  @@unique([userId, publisherId])
+}
+
+model Category {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  games Game[]
+}
+
+model Transaction {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  recipientId Int?
+  total       Decimal
+  status      String   @default("PENDING") // PENDING, SUCCESS, FAILED
+  createdAt   DateTime @default(now())
+
+  // Relations
+  user      User   @relation(fields: [userId], references: [id])
+  recipient User?  @relation("GiftRecipient", fields: [recipientId], references: [id])
+  games     Game[] // Implicit many-to-many for games in a single transaction
+}
+
+model Library {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  gameId    Int
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+  game Game @relation(fields: [gameId], references: [id])
+
+  @@unique([userId, gameId]) // User can't have duplicate games in library
+}
+
+model Wishlist {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  gameId    Int
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+  game Game @relation(fields: [gameId], references: [id])
+
+  @@unique([userId, gameId])
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  gameId    Int
+  rating    Int      @default(0) // 1-5
+  comment   String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  user      User         @relation(fields: [userId], references: [id])
+  game      Game         @relation(fields: [gameId], references: [id])
+  votes     ReviewVote[]
+}
+
+model ReviewVote {
+  id        Int      @id @default(autoincrement())
+  reviewId  Int
+  userId    Int
+  isUpvote  Boolean  // true for upvote, false for downvote
+  createdAt DateTime @default(now())
+
+  // Relations
+  review    Review   @relation(fields: [reviewId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([reviewId, userId])
+}
+
+model DevProjectComment {
+  id          Int      @id @default(autoincrement())
+  projectId   Int
+  userId      Int
+  content     String
+  createdAt   DateTime @default(now())
+
+  // Relations
+  project     DevProject @relation(fields: [projectId], references: [id])
+  user        User       @relation(fields: [userId], references: [id])
+}
+
+model SaleEvent {
+  id              Int      @id @default(autoincrement())
+  name            String
+  discountPercent Int      @default(0)
+  startDate       DateTime
+  endDate         DateTime
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  message   String
+  type      String   // e.g., "SALE", "REVIEW", "PURCHASE"
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Friend {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  friendId  Int
+  status    String   @default("PENDING") // PENDING, ACCEPTED, BLOCKED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User @relation("UserFriends", fields: [userId], references: [id])
+  friend User @relation("UserFriendOf", fields: [friendId], references: [id])
+
+  @@unique([userId, friendId])
+}
+
+model Activity {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  type      String   // PURCHASE, REVIEW, WISHLIST, JOINED
+  message   String
+  metadata  String?  // JSON string for extra info
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model GameUpdate {
+  id          Int      @id @default(autoincrement())
+  gameId      Int
+  title       String
+  content     String
+  version     String?
+  type        String   @default("UPDATE") // UPDATE, HOTFIX, DLC, ANNOUNCEMENT
+  createdAt   DateTime @default(now())
+
+  game Game @relation(fields: [gameId], references: [id])
+}

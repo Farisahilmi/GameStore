@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #171a21;
+  color: #c6d4df;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Steam-like Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #171a21; 
+}
+::-webkit-scrollbar-thumb {
+  background: #2a475e; 
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #66c0f4; 
+}
+
+/* Custom Animations */
+@layer utilities {
+  .animate-blob {
+    animation: blob 10s infinite;
+  }
+  .animation-delay-2000 {
+    animation-delay: 2s;
+  }
+  .animation-delay-4000 {
+    animation-delay: 4s;
+  }
+  .animate-gradient-slow {
+    background-size: 400% 400%;
+    animation: gradient 15s ease infinite;
+  }
+  .animate-float-slow {
+    animation: float 30s linear infinite;
+  }
+  .animate-float-medium {
+    animation: float 20s linear infinite;
+  }
+  .animate-float-fast {
+    animation: float 15s linear infinite;
+  }
+  .animate-spin-slow {
+    animation: spin 15s linear infinite;
+  }
+}
+
+@keyframes blob {
+  0% { transform: translate(0px, 0px) scale(1); }
+  33% { transform: translate(30px, -50px) scale(1.2); }
+  66% { transform: translate(-20px, 20px) scale(0.8); }
+  100% { transform: translate(0px, 0px) scale(1); }
+}
+
+@keyframes gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes float {
+    0% { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+    10% { opacity: 0.1; }
+    90% { opacity: 0.1; }
+    100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
