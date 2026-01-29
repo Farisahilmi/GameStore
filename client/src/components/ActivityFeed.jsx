@@ -19,9 +19,10 @@ const ActivityFeed = ({ user }) => {
         const res = await axios.get(url, {
             headers: token ? { Authorization: `Bearer ${token}` } : {}
         });
-        setActivities(res.data.data);
+        setActivities(res.data?.data || []);
     } catch (err) {
         console.error('Failed to fetch activities');
+        setActivities([]);
     } finally {
         setLoading(false);
     }

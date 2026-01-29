@@ -26,13 +26,14 @@ const GameDetails = ({ addToCart, directPurchase, library }) => {
     const fetchGameAndRelated = async () => {
       try {
         const res = await axios.get(`/api/games/${id}`);
-        setGame(res.data.data);
+        setGame(res.data?.data);
         
         // Fetch related games based on first category
-        if (res.data.data.categories && res.data.data.categories.length > 0) {
-            const category = res.data.data.categories[0].name;
+        const gameData = res.data?.data;
+        if (gameData?.categories && gameData.categories.length > 0) {
+            const category = gameData.categories[0].name;
             const relatedRes = await axios.get(`/api/games?category=${category}&limit=4`);
-            setRelatedGames(relatedRes.data.data.games.filter(g => g.id !== parseInt(id)));
+            setRelatedGames(relatedRes.data?.data?.games?.filter(g => g.id !== parseInt(id)) || []);
         }
       } catch (err) {
         console.error(err);
