@@ -21,11 +21,12 @@ const DiscoveryQueue = ({ addToCart, directPurchase, library }) => {
         const res = await axios.get('/api/games/discovery-queue', {
             headers: { Authorization: `Bearer ${token}` }
         });
-        setQueue(res.data.data);
+        setQueue(res.data?.data || []);
     } catch (err) {
         console.error(err);
-        toast.error('Failed to load discovery queue');
-        navigate('/');
+        // toast.error('Failed to load discovery queue'); // Optional: suppress toast on init
+        setQueue([]);
+        // navigate('/'); // Don't redirect immediately, let UI handle empty state
     } finally {
         setLoading(false);
     }

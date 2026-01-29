@@ -14,10 +14,12 @@ const Sales = ({ addToCart, library }) => {
             // For now, let's fetch games and filter client-side or assume backend returns some
             const res = await axios.get('/api/games?limit=50');
             // Filter only games with discount > 0
-            const discounted = res.data.data.games.filter(g => g.discountTotal > 0);
+            const allGames = res.data?.data?.games || [];
+            const discounted = allGames.filter(g => g.discountTotal > 0);
             setGames(discounted);
         } catch (err) {
             console.error(err);
+            setGames([]);
         } finally {
             setLoading(false);
         }
