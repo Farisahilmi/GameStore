@@ -35,7 +35,8 @@ const Library = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      const gamesList = res.data.data.map(game => ({
+      const gamesData = res.data?.data || [];
+      const gamesList = gamesData.map(game => ({
           ...game,
           isInstalled: localStorage.getItem(`installed_${game.id}`) === 'true'
       }));

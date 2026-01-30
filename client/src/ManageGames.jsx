@@ -42,10 +42,11 @@ const ManageGames = ({ user }) => {
     setLoading(true);
     try {
       const res = await axios.get(`/api/games?page=${page}&limit=${limit}`);
-      setGames(res.data.data.games);
-      setTotalPages(res.data.data.meta.totalPages);
+      setGames(res.data?.data?.games || []);
+      setTotalPages(res.data?.data?.meta?.totalPages || 1);
     } catch (err) {
       console.error('Failed to fetch games', err);
+      setGames([]);
     } finally {
       setLoading(false);
     }

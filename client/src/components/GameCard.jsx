@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCartPlus, faBolt, faStar } from '@fortawesome/free-solid-svg-icons';
 
 const GameCard = ({ game, onBuy, onBuyNow, isOwned }) => {
+  if (!game) return null; // Defensive check
   const { title, originalPrice, finalPrice, discountTotal, imageUrl, categories, avgRating, reviewCount, activeSaleName } = game;
 
   return (

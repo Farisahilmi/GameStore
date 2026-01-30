@@ -19,9 +19,10 @@ const Wishlist = ({ addToCart }) => {
       const res = await axios.get('/api/wishlist', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setWishlist(res.data.data);
+      setWishlist(res.data?.data || []);
     } catch (err) {
       console.error(err);
+      setWishlist([]);
     } finally {
       setLoading(false);
     }

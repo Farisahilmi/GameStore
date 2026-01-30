@@ -499,7 +499,7 @@ const App = () => {
       };
       fetchLibrary();
 
-      const newSocket = io(import.meta.env.VITE_API_URL || 'https://gamestore-production.up.railway.app');
+      const newSocket = io(import.meta.env.VITE_API_URL || 'http://localhost:3000');
       setSocket(newSocket);
 
       newSocket.emit('join', user.id);

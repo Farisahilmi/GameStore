@@ -16,9 +16,10 @@ const DevUpdatesFeed = () => {
         const fetchUpdates = async () => {
             try {
                 const res = await axios.get('/api/dev-projects/public'); 
-                setUpdates(res.data.data.slice(0, 4));
+                setUpdates(res.data?.data?.slice(0, 4) || []);
             } catch (err) {
                 console.error('Failed to fetch dev updates');
+                setUpdates([]);
             } finally {
                 setLoading(false);
             }
@@ -30,9 +31,10 @@ const DevUpdatesFeed = () => {
         setLoadingComments(true);
         try {
             const res = await axios.get(`/api/dev-projects/${projectId}/comments`);
-            setComments(res.data.data);
+            setComments(res.data?.data || []);
         } catch (err) {
             toast.error('Failed to load comments');
+            setComments([]);
         } finally {
             setLoadingComments(false);
         }
