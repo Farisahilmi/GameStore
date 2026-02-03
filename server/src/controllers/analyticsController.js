@@ -71,6 +71,30 @@ const getDashboardStats = async (req, res, next) => {
         });
     }
 
+    // 6. Sales by Category
+    const categorySales = await prisma.category.findMany({
+        include: {
+            games: {
+                where: isPublisher ? { publisherId } : {},
+                include: {
+                    transactions: {
+                        select: { total: true }
+                    }
+                }
+            }
+        }
+    });
+
+    const categoryData = categorySales
+        .map(cat => ({
+            name: cat.name,
+            value: cat.games.reduce((sum, game) => 
+                sum + game.transactions.reduce((tSum, tx) => tSum + Number(tx.total), 0), 0)
+        }))
+        .filter(cat => cat.value > 0)
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 5);
+
     res.status(200).json({
       success: true,
       data: {
@@ -79,7 +103,8 @@ const getDashboardStats = async (req, res, next) => {
         totalTransactions,
         totalRevenue,
         recentTransactions,
-        chartData
+        chartData,
+        categoryData
       }
     });
   } catch (error) {

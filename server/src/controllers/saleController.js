@@ -48,8 +48,7 @@ const createEvent = async (req, res, next) => {
       // In a real app, use a worker queue for this. 
       // For now, we'll do it in a loop or just a few for demo.
       users.forEach(async (user) => {
-        await notificationService.sendNotification(
-          req.app,
+        await notificationService.createNotification(
           user.id,
           `New Sale Event: ${event.name}! Get ${event.discountPercent}% off on all games!`,
           'SALE'

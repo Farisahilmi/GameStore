@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell, Legend } from 'recharts';
+import { useTheme } from './context/ThemeContext';
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 const AdminDashboard = ({ user }) => {
+  const { theme } = useTheme();
   const [stats, setStats] = useState(null);
   const [publisherStats, setPublisherStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -32,39 +36,39 @@ const AdminDashboard = ({ user }) => {
   }, [user]);
 
   if (loading) return (
-    <div className="flex justify-center items-center h-screen bg-steam-dark">
-      <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-steam-accent"></div>
+    <div className={`flex justify-center items-center h-screen ${theme.colors.bg}`}>
+      <div className={`animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 ${theme.colors.accent}`}></div>
     </div>
   );
 
   return (
-    <div className="container mx-auto px-4 py-8 bg-steam-dark min-h-screen text-white">
-      <h2 className="text-3xl font-bold mb-8 text-steam-accent border-b border-gray-700 pb-4">
+    <div className={`container mx-auto px-4 py-8 ${theme.colors.bg} min-h-screen ${theme.colors.text}`}>
+      <h2 className={`text-3xl font-bold mb-8 ${theme.colors.accent} border-b ${theme.colors.border} pb-4`}>
           {user.role === 'ADMIN' ? 'Global Administration' : 'Publisher Dashboard'}
       </h2>
       
       {/* Global Charts & Stats */}
       {stats && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
-              <div className="lg:col-span-2 bg-steam-light p-6 rounded-lg border border-gray-700 shadow-xl">
-                  <h3 className="text-gray-400 font-bold mb-6 uppercase text-sm tracking-widest">Revenue (Last 7 Days)</h3>
+              <div className={`${theme.colors.card} p-6 rounded-lg border ${theme.colors.border} shadow-xl lg:col-span-2`}>
+                  <h3 className="opacity-50 font-bold mb-6 uppercase text-sm tracking-widest">Revenue (Last 7 Days)</h3>
                   <div className="h-[300px] w-full">
                       <ResponsiveContainer width="100%" height="100%">
                           <AreaChart data={stats.chartData}>
                               <defs>
                                   <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                                      <stop offset="5%" stopColor="#2a475e" stopOpacity={0.8}/>
-                                      <stop offset="95%" stopColor="#2a475e" stopOpacity={0}/>
+                                      <stop offset="5%" stopColor={theme.name === 'Clean Light' ? '#3b82f6' : '#66c0f4'} stopOpacity={0.8}/>
+                                      <stop offset="95%" stopColor={theme.name === 'Clean Light' ? '#3b82f6' : '#66c0f4'} stopOpacity={0}/>
                                   </linearGradient>
                               </defs>
-                              <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
+                              <CartesianGrid strokeDasharray="3 3" stroke={theme.name === 'Clean Light' ? '#e5e7eb' : '#374151'} vertical={false} />
                               <XAxis dataKey="name" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
                               <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`} />
                               <Tooltip 
-                                contentStyle={{ backgroundColor: '#1b2838', border: '1px solid #374151', borderRadius: '8px' }}
-                                itemStyle={{ color: '#66c0f4' }}
+                                contentStyle={{ backgroundColor: theme.name === 'Clean Light' ? '#fff' : '#1b2838', border: `1px solid ${theme.name === 'Clean Light' ? '#e5e7eb' : '#374151'}`, borderRadius: '8px' }}
+                                itemStyle={{ color: theme.name === 'Clean Light' ? '#2563eb' : '#66c0f4' }}
                               />
-                              <Area type="monotone" dataKey="sales" stroke="#66c0f4" fillOpacity={1} fill="url(#colorSales)" />
+                              <Area type="monotone" dataKey="sales" stroke={theme.name === 'Clean Light' ? '#2563eb' : '#66c0f4'} fillOpacity={1} fill="url(#colorSales)" />
                           </AreaChart>
                       </ResponsiveContainer>
                   </div>
@@ -88,31 +92,89 @@ const AdminDashboard = ({ user }) => {
           </div>
       )}
 
+      {/* Secondary Charts Row */}
+      {stats && stats.categoryData && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+              <div className={`${theme.colors.card} p-6 rounded-lg border ${theme.colors.border} shadow-xl`}>
+                  <h3 className="opacity-50 font-bold mb-6 uppercase text-sm tracking-widest">Sales by Category</h3>
+                  <div className="h-[300px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                              <Pie
+                                  data={stats.categoryData}
+                                  cx="50%"
+                                  cy="50%"
+                                  innerRadius={60}
+                                  outerRadius={80}
+                                  fill="#8884d8"
+                                  paddingAngle={5}
+                                  dataKey="value"
+                                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                              >
+                                  {stats.categoryData.map((entry, index) => (
+                                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                  ))}
+                              </Pie>
+                              <Tooltip 
+                                contentStyle={{ backgroundColor: theme.name === 'Clean Light' ? '#fff' : '#1b2838', border: `1px solid ${theme.name === 'Clean Light' ? '#e5e7eb' : '#374151'}`, borderRadius: '8px' }}
+                              />
+                              <Legend verticalAlign="bottom" height={36}/>
+                          </PieChart>
+                      </ResponsiveContainer>
+                  </div>
+              </div>
+              
+              {/* Top Games Summary (Admin Only or Publisher) */}
+              <div className={`${theme.colors.card} p-6 rounded-lg border ${theme.colors.border} shadow-xl`}>
+                  <h3 className="opacity-50 font-bold mb-6 uppercase text-sm tracking-widest">Recent Activity Pulse</h3>
+                  <div className="space-y-4">
+                      {stats.recentTransactions.slice(0, 4).map(tx => (
+                          <div key={tx.id} className="flex items-center justify-between p-3 bg-black/10 rounded-lg">
+                              <div className="flex items-center gap-3">
+                                  <div className={`w-8 h-8 rounded-full ${theme.colors.accent.replace('text-', 'bg-')} flex items-center justify-center text-xs font-bold text-white`}>
+                                      {tx.user.name.charAt(0).toUpperCase()}
+                                  </div>
+                                  <div>
+                                      <div className="text-sm font-bold">{tx.user.name}</div>
+                                      <div className="text-[10px] opacity-50">{new Date(tx.createdAt).toLocaleTimeString()}</div>
+                                  </div>
+                              </div>
+                              <div className="text-green-500 font-bold">${Number(tx.total).toFixed(2)}</div>
+                          </div>
+                      ))}
+                      {stats.recentTransactions.length === 0 && (
+                          <div className="text-center py-10 opacity-30 italic">No recent activity</div>
+                      )}
+                  </div>
+              </div>
+          </div>
+      )}
+
       {/* Publisher Stats */}
       {publisherStats && (
         <div className="mb-10">
-            <h3 className="text-xl font-bold mb-6 text-gray-400 uppercase tracking-widest">My Performance</h3>
+            <h3 className="text-xl font-bold mb-6 opacity-50 uppercase tracking-widest">My Performance</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-steam-light p-6 rounded-lg border border-gray-700 shadow-xl">
-                    <h4 className="text-gray-500 text-sm font-bold uppercase mb-2">My Total Revenue</h4>
-                    <div className="text-3xl font-bold text-green-400">${publisherStats.totalRevenue.toFixed(2)}</div>
+                <div className={`${theme.colors.card} p-6 rounded-lg border ${theme.colors.border} shadow-xl`}>
+                    <h4 className="opacity-50 text-sm font-bold uppercase mb-2">My Total Revenue</h4>
+                    <div className="text-3xl font-bold text-green-500">${publisherStats.totalRevenue.toFixed(2)}</div>
                 </div>
-                <div className="bg-steam-light p-6 rounded-lg border border-gray-700 shadow-xl">
-                    <h4 className="text-gray-500 text-sm font-bold uppercase mb-2">My Total Sales</h4>
-                    <div className="text-3xl font-bold text-blue-400">{publisherStats.totalSales} units</div>
+                <div className={`${theme.colors.card} p-6 rounded-lg border ${theme.colors.border} shadow-xl`}>
+                    <h4 className="opacity-50 text-sm font-bold uppercase mb-2">My Total Sales</h4>
+                    <div className="text-3xl font-bold text-blue-500">{publisherStats.totalSales} units</div>
                 </div>
-                <div className="bg-steam-light p-6 rounded-lg border border-gray-700 shadow-xl">
-                    <h4 className="text-gray-500 text-sm font-bold uppercase mb-2">My Games</h4>
-                    <div className="text-3xl font-bold text-purple-400">{publisherStats.gamesCount}</div>
+                <div className={`${theme.colors.card} p-6 rounded-lg border ${theme.colors.border} shadow-xl`}>
+                    <h4 className="opacity-50 text-sm font-bold uppercase mb-2">My Games</h4>
+                    <div className="text-3xl font-bold text-purple-500">{publisherStats.gamesCount}</div>
                 </div>
             </div>
 
-            <div className="bg-steam-light rounded-lg border border-gray-700 overflow-hidden shadow-2xl">
-                <div className="p-4 bg-gray-800/50 border-b border-gray-700 font-bold">Game Performance Breakdown</div>
+            <div className={`${theme.colors.card} rounded-lg border ${theme.colors.border} overflow-hidden shadow-2xl`}>
+                <div className={`p-4 ${theme.name === 'Clean Light' ? 'bg-gray-100' : 'bg-gray-800/50'} border-b ${theme.colors.border} font-bold`}>Game Performance Breakdown</div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
                         <thead>
-                            <tr className="bg-gray-900/50 text-gray-500 text-[10px] uppercase">
+                            <tr className={`${theme.name === 'Clean Light' ? 'bg-gray-50' : 'bg-gray-900/50'} opacity-50 text-[10px] uppercase`}>
                                 <th className="px-6 py-3">Game Title</th>
                                 <th className="px-6 py-3">Price</th>
                                 <th className="px-6 py-3">Discount</th>
@@ -120,20 +182,20 @@ const AdminDashboard = ({ user }) => {
                                 <th className="px-6 py-3">Reviews</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-800">
+                        <tbody className={`divide-y ${theme.colors.border}`}>
                             {publisherStats.games.map(g => (
-                                <tr key={g.id} className="hover:bg-white/5 transition text-sm">
-                                    <td className="px-6 py-4 font-bold text-white">{g.title}</td>
-                                    <td className="px-6 py-4 text-gray-400">${Number(g.price).toFixed(2)}</td>
+                                <tr key={g.id} className="hover:bg-black/5 transition text-sm">
+                                    <td className={`px-6 py-4 font-bold ${theme.colors.text}`}>{g.title}</td>
+                                    <td className="px-6 py-4 opacity-70">${Number(g.price).toFixed(2)}</td>
                                     <td className="px-6 py-4">
                                         {g.discount > 0 ? (
                                             <span className="bg-red-900/50 text-red-400 px-2 py-0.5 rounded border border-red-500/20">-{g.discount}%</span>
                                         ) : (
-                                            <span className="text-gray-600">-</span>
+                                            <span className="opacity-30">-</span>
                                         )}
                                     </td>
-                                    <td className="px-6 py-4 font-bold text-blue-400">{g.salesCount}</td>
-                                    <td className="px-6 py-4 text-gray-400">{g.reviewCount}</td>
+                                    <td className="px-6 py-4 font-bold text-blue-500">{g.salesCount}</td>
+                                    <td className="px-6 py-4 opacity-70">{g.reviewCount}</td>
                                 </tr>
                             ))}
                         </tbody>
@@ -145,28 +207,35 @@ const AdminDashboard = ({ user }) => {
 
       {/* Recent Transactions Table (Admin Only) */}
       {user.role === 'ADMIN' && stats && (
-        <div className="bg-steam-light rounded-lg shadow-lg border border-gray-700 overflow-hidden">
-            <div className="p-6 border-b border-gray-700 bg-gray-800/50">
-                <h3 className="text-xl font-bold text-white uppercase tracking-wider">Global Recent Transactions</h3>
+        <div className={`${theme.colors.card} rounded-lg shadow-lg border ${theme.colors.border} overflow-hidden`}>
+            <div className={`p-6 border-b ${theme.colors.border} ${theme.name === 'Clean Light' ? 'bg-gray-100' : 'bg-gray-800/50'}`}>
+                <h3 className={`text-xl font-bold ${theme.colors.text} uppercase tracking-wider`}>Global Recent Transactions</h3>
             </div>
-            <div className="overflow-x-auto">
-                <table className="w-full text-left">
+            <div className="overflow-x-auto rounded-lg border border-white/5">
+                <table className="w-full text-left border-collapse">
                     <thead>
-                        <tr className="bg-gray-800 text-gray-400 uppercase text-xs">
-                            <th className="px-6 py-3">User</th>
-                            <th className="px-6 py-3">Amount</th>
-                            <th className="px-6 py-3">Date</th>
-                            <th className="px-6 py-3">Status</th>
+                        <tr className={`${theme.name === 'Clean Light' ? 'bg-gray-100' : 'bg-gray-800'} opacity-50 uppercase text-[10px] tracking-widest`}>
+                            <th className="px-6 py-4">User</th>
+                            <th className="px-6 py-4">Amount</th>
+                            <th className="px-6 py-4">Date</th>
+                            <th className="px-6 py-4">Status</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-700">
+                    <tbody className={`divide-y ${theme.colors.border}`}>
                         {stats.recentTransactions.map(tx => (
-                            <tr key={tx.id} className="hover:bg-white/5 transition">
-                                <td className="px-6 py-4 font-medium">{tx.user.name}</td>
-                                <td className="px-6 py-4 text-green-400 font-bold">${Number(tx.total).toFixed(2)}</td>
-                                <td className="px-6 py-4 text-gray-400">{new Date(tx.createdAt).toLocaleDateString()}</td>
+                            <tr key={tx.id} className="hover:bg-blue-500/5 transition group">
                                 <td className="px-6 py-4">
-                                    <span className="bg-green-900 text-green-200 text-xs px-2 py-1 rounded-full border border-green-700">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-8 h-8 rounded-full ${theme.colors.accent.replace('text-', 'bg-')} flex items-center justify-center text-xs font-bold text-white`}>
+                                            {tx.user.name.charAt(0).toUpperCase()}
+                                        </div>
+                                        <span className="font-medium">{tx.user.name}</span>
+                                    </div>
+                                </td>
+                                <td className="px-6 py-4 text-green-500 font-bold tracking-tight">${Number(tx.total).toFixed(2)}</td>
+                                <td className="px-6 py-4 opacity-70 text-sm">{new Date(tx.createdAt).toLocaleDateString()}</td>
+                                <td className="px-6 py-4">
+                                    <span className="bg-green-500/10 text-green-500 text-[10px] font-bold px-2 py-1 rounded-full border border-green-500/20 uppercase tracking-tighter">
                                         {tx.status || 'COMPLETED'}
                                     </span>
                                 </td>

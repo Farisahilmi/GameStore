@@ -141,6 +141,7 @@ const getGameById = async (id) => {
     where: { id: parseInt(id) },
     include: {
       categories: true,
+      screenshots: true,
       publisher: {
         select: {
           id: true,
@@ -171,7 +172,7 @@ const getGameById = async (id) => {
 };
 
 const createGame = async (data, publisherId) => {
-  const { title, description, price, discount, imageUrl, releaseDate, categoryNames } = data;
+  const { title, description, price, discount, imageUrl, releaseDate, categoryNames, screenshots } = data;
 
   // Prepare category connections or creations
   let categoriesConnect = [];
@@ -193,10 +194,14 @@ const createGame = async (data, publisherId) => {
       publisherId,
       categories: {
         connectOrCreate: categoriesConnect
-      }
+      },
+      screenshots: screenshots ? {
+          create: screenshots.map(url => ({ url }))
+      } : undefined
     },
     include: {
-      categories: true
+      categories: true,
+      screenshots: true
     }
   });
 
@@ -219,7 +224,7 @@ const updateGame = async (id, data, userId, userRole) => {
     throw error;
   }
 
-  const { title, description, price, discount, imageUrl, releaseDate, categoryNames } = data;
+  const { title, description, price, discount, imageUrl, releaseDate, categoryNames, screenshots } = data;
   
   const updateData = {
     title,
@@ -241,11 +246,20 @@ const updateGame = async (id, data, userId, userRole) => {
       };
   }
 
+  // If screenshots are updated
+  if (screenshots) {
+      updateData.screenshots = {
+          deleteMany: {}, // Clear existing
+          create: screenshots.map(url => ({ url }))
+      };
+  }
+
   const updatedGame = await prisma.game.update({
     where: { id: parseInt(id) },
     data: updateData,
     include: {
-      categories: true
+      categories: true,
+      screenshots: true
     }
   });
 

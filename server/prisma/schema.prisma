@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,85 +7,83 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Enums
-// SQLite doesn't support enums natively, but Prisma simulates them at application level
-// or we can use String and validate in code.
-// However, Prisma SQLite provider doesn't support enums in schema. 
-// We should change Enums to String for SQLite compatibility or let Prisma handle it if supported (Prisma handles enums in SQLite by mapping to string, but schema syntax is stricter).
-// Wait, Prisma + SQLite DOES NOT support enum. I should change them to String.
-
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  name      String?
-  role      String   @default("USER") // USER, ADMIN, PUBLISHER
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  publishedGames Game[]        @relation("PublisherGames")
-  transactions   Transaction[]
-  library        Library[]
-  wishlist       Wishlist[]
-  reviews        Review[]
-  notifications  Notification[]
-  devProjects    DevProject[]
-  following      Follow[]      @relation("UserFollowing")
-  followers      Follow[]      @relation("PublisherFollowers")
-  reviewVotes    ReviewVote[]
-  devComments    DevProjectComment[]
-  friends        Friend[]      @relation("UserFriends")
-  friendOf       Friend[]      @relation("UserFriendOf")
+  id             Int                 @id @default(autoincrement())
+  email          String              @unique
+  password       String
+  name           String?
+  bio            String?
+  role           String              @default("USER")
+  theme          String              @default("default")
+  walletBalance  Decimal             @default(0)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
   activities     Activity[]
-  giftsReceived  Transaction[] @relation("GiftRecipient")
+  devProjects    DevProject[]
+  devComments    DevProjectComment[]
+  followers      Follow[]            @relation("PublisherFollowers")
+  following      Follow[]            @relation("UserFollowing")
+  friendOf       Friend[]            @relation("UserFriendOf")
+  friends        Friend[]            @relation("UserFriends")
+  publishedGames Game[]              @relation("PublisherGames")
+  library        Library[]
+  notifications  Notification[]
+  reviews        Review[]
+  reviewVotes    ReviewVote[]
+  giftsReceived  Transaction[]       @relation("GiftRecipient")
+  transactions   Transaction[]
+  wishlist       Wishlist[]
+  voucherUsages  VoucherUsage[]
 }
 
 model Game {
-  id          Int      @id @default(autoincrement())
-  title       String
-  description String
-  price       Decimal  @default(0)
-  discount    Int      @default(0) // Discount percentage (0-100) by Publisher
-  imageUrl    String?
-  releaseDate DateTime @default(now())
-  publisherId Int?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  publisher    User?         @relation("PublisherGames", fields: [publisherId], references: [id])
-  transactions Transaction[]
-  inLibraries  Library[]
-  inWishlists  Wishlist[]
-  reviews      Review[]
-  categories   Category[]
+  id           Int           @id @default(autoincrement())
+  title        String
+  description  String
+  price        Decimal       @default(0)
+  discount     Int           @default(0)
+  imageUrl     String?
+  releaseDate  DateTime      @default(now())
+  publisherId  Int?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  publisher    User?         @relation("PublisherGames", fields: [publisherId], references: [id], onDelete: SetNull)
   updates      GameUpdate[]
+  inLibraries  Library[]
+  reviews      Review[]
+  inWishlists  Wishlist[]
+  categories   Category[]    @relation("CategoryToGame")
+  transactions Transaction[] @relation("GameToTransaction")
+  screenshots  GameImage[]
+}
+
+model GameImage {
+  id        Int      @id @default(autoincrement())
+  gameId    Int
+  url       String
+  createdAt DateTime @default(now())
+  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
 }
 
 model DevProject {
-  id          Int      @id @default(autoincrement())
+  id          Int                 @id @default(autoincrement())
   publisherId Int
   title       String
-  status      String   @default("CONCEPT") // CONCEPT, IN_DEVELOPMENT, ALPHA, BETA, RELEASED
-  progress    Int      @default(0) // 0-100
-  lastUpdate  DateTime @default(now())
-  createdAt   DateTime @default(now())
-
-  // Relations
-  publisher User @relation(fields: [publisherId], references: [id])
-  comments  DevProjectComment[]
+  status      String              @default("CONCEPT")
+  progress    Int                 @default(0)
+  lastUpdate  DateTime            @default(now())
+  createdAt   DateTime            @default(now())
+  publisher   User                @relation(fields: [publisherId], references: [id], onDelete: Cascade)
+  comments    DevProjectComment[]
 }
 
 model Follow {
   id          Int      @id @default(autoincrement())
-  userId      Int      // The user who follows
-  publisherId Int      // The publisher being followed
+  userId      Int
+  publisherId Int
   createdAt   DateTime @default(now())
-
-  // Relations
-  user      User @relation("UserFollowing", fields: [userId], references: [id])
-  publisher User @relation("PublisherFollowers", fields: [publisherId], references: [id])
+  publisher   User     @relation("PublisherFollowers", fields: [publisherId], references: [id], onDelete: Cascade)
+  user        User     @relation("UserFollowing", fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, publisherId])
 }
@@ -96,7 +91,7 @@ model Follow {
 model Category {
   id    Int    @id @default(autoincrement())
   name  String @unique
-  games Game[]
+  games Game[] @relation("CategoryToGame")
 }
 
 model Transaction {
@@ -104,13 +99,12 @@ model Transaction {
   userId      Int
   recipientId Int?
   total       Decimal
-  status      String   @default("PENDING") // PENDING, SUCCESS, FAILED
+  status      String   @default("PENDING")
+  type        String   @default("PURCHASE")
   createdAt   DateTime @default(now())
-
-  // Relations
-  user      User   @relation(fields: [userId], references: [id])
-  recipient User?  @relation("GiftRecipient", fields: [recipientId], references: [id])
-  games     Game[] // Implicit many-to-many for games in a single transaction
+  recipient   User?    @relation("GiftRecipient", fields: [recipientId], references: [id], onDelete: SetNull)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  games       Game[]   @relation("GameToTransaction")
 }
 
 model Library {
@@ -118,12 +112,10 @@ model Library {
   userId    Int
   gameId    Int
   createdAt DateTime @default(now())
+  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Relations
-  user User @relation(fields: [userId], references: [id])
-  game Game @relation(fields: [gameId], references: [id])
-
-  @@unique([userId, gameId]) // User can't have duplicate games in library
+  @@unique([userId, gameId])
 }
 
 model Wishlist {
@@ -131,52 +123,46 @@ model Wishlist {
   userId    Int
   gameId    Int
   createdAt DateTime @default(now())
-
-  // Relations
-  user User @relation(fields: [userId], references: [id])
-  game Game @relation(fields: [gameId], references: [id])
+  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, gameId])
 }
 
 model Review {
-  id        Int      @id @default(autoincrement())
+  id        Int          @id @default(autoincrement())
   userId    Int
   gameId    Int
-  rating    Int      @default(0) // 1-5
+  rating    Int          @default(0)
   comment   String?
-  createdAt DateTime @default(now())
-
-  // Relations
-  user      User         @relation(fields: [userId], references: [id])
-  game      Game         @relation(fields: [gameId], references: [id])
+  createdAt DateTime     @default(now())
+  game      Game         @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   votes     ReviewVote[]
+
+  @@unique([userId, gameId])
 }
 
 model ReviewVote {
   id        Int      @id @default(autoincrement())
   reviewId  Int
   userId    Int
-  isUpvote  Boolean  // true for upvote, false for downvote
+  isUpvote  Boolean
   createdAt DateTime @default(now())
-
-  // Relations
-  review    Review   @relation(fields: [reviewId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
 
   @@unique([reviewId, userId])
 }
 
 model DevProjectComment {
-  id          Int      @id @default(autoincrement())
-  projectId   Int
-  userId      Int
-  content     String
-  createdAt   DateTime @default(now())
-
-  // Relations
-  project     DevProject @relation(fields: [projectId], references: [id])
-  user        User       @relation(fields: [userId], references: [id])
+  id        Int        @id @default(autoincrement())
+  projectId Int
+  userId    Int
+  content   String
+  createdAt DateTime   @default(now())
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project   DevProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
 model SaleEvent {
@@ -193,24 +179,21 @@ model Notification {
   id        Int      @id @default(autoincrement())
   userId    Int
   message   String
-  type      String   // e.g., "SALE", "REVIEW", "PURCHASE"
+  type      String
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
-
-  // Relations
-  user User @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Friend {
   id        Int      @id @default(autoincrement())
   userId    Int
   friendId  Int
-  status    String   @default("PENDING") // PENDING, ACCEPTED, BLOCKED
+  status    String   @default("PENDING")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  user   User @relation("UserFriends", fields: [userId], references: [id])
-  friend User @relation("UserFriendOf", fields: [friendId], references: [id])
+  friend    User     @relation("UserFriendOf", fields: [friendId], references: [id], onDelete: Cascade)
+  user      User     @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, friendId])
 }
@@ -218,22 +201,43 @@ model Friend {
 model Activity {
   id        Int      @id @default(autoincrement())
   userId    Int
-  type      String   // PURCHASE, REVIEW, WISHLIST, JOINED
+  type      String
   message   String
-  metadata  String?  // JSON string for extra info
+  metadata  String?
   createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model GameUpdate {
-  id          Int      @id @default(autoincrement())
-  gameId      Int
-  title       String
-  content     String
-  version     String?
-  type        String   @default("UPDATE") // UPDATE, HOTFIX, DLC, ANNOUNCEMENT
-  createdAt   DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  gameId    Int
+  title     String
+  content   String
+  version   String?
+  type      String   @default("UPDATE")
+  createdAt DateTime @default(now())
+  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+}
 
-  game Game @relation(fields: [gameId], references: [id])
+model Voucher {
+  id              Int            @id @default(autoincrement())
+  code            String         @unique
+  discountPercent Int
+  maxUses         Int            @default(100)
+  usedCount       Int            @default(0)
+  expiryDate      DateTime
+  isActive        Boolean        @default(true)
+  createdAt       DateTime       @default(now())
+  usages          VoucherUsage[]
+}
+
+model VoucherUsage {
+  id        Int      @id @default(autoincrement())
+  voucherId Int
+  userId    Int
+  usedAt    DateTime @default(now())
+  voucher   Voucher  @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([voucherId, userId])
 }

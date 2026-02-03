@@ -65,7 +65,7 @@ const DiscoveryQueue = ({ addToCart, directPurchase, library }) => {
           <div className="bg-steam-light p-12 rounded-2xl border border-gray-800 text-center max-w-lg shadow-2xl">
               <FontAwesomeIcon icon={faCheckCircle} className="text-6xl text-green-500 mb-6" />
               <h2 className="text-3xl font-bold text-white mb-4">No New Discoveries</h2>
-              <p className="text-gray-400 mb-8">You've seen everything we recommend for now. Check back tomorrow!</p>
+              <p className="text-gray-400 mb-8">You&apos;ve seen everything we recommend for now. Check back tomorrow!</p>
               <button onClick={() => navigate('/')} className="bg-steam-accent hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-lg transition">
                   Back to Store
               </button>
@@ -133,13 +133,14 @@ const DiscoveryQueue = ({ addToCart, directPurchase, library }) => {
                 </div>
 
                 <div className="space-y-3">
-                    <div className="flex gap-2">
-                        {library && library.includes(currentGame.id) ? (
-                            <div className="w-full bg-gray-800 text-gray-400 font-bold py-3 rounded text-center border border-gray-700 cursor-default">
-                                In Library
-                            </div>
-                        ) : (
-                            <>
+                    {library && library.includes(currentGame.id) ? (
+                        <div className="w-full bg-gray-800 text-gray-400 font-bold py-3 rounded text-center border border-gray-700 cursor-default mb-2">
+                            <FontAwesomeIcon icon={faCheckCircle} className="mr-2" />
+                            Already in Library
+                        </div>
+                    ) : (
+                        <>
+                            <div className="flex gap-2">
                                 <button 
                                     onClick={() => addToCart(currentGame)}
                                     className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition flex items-center justify-center gap-2 shadow-lg"
@@ -152,15 +153,16 @@ const DiscoveryQueue = ({ addToCart, directPurchase, library }) => {
                                 >
                                     <FontAwesomeIcon icon={faBolt} /> Buy Now
                                 </button>
-                            </>
-                        )}
-                    </div>
-                    <button 
-                        onClick={() => addToWishlist(currentGame.id)}
-                        className="w-full bg-pink-600/10 hover:bg-pink-600/20 text-pink-500 border border-pink-500/30 font-bold py-2 rounded-lg transition flex items-center justify-center gap-2"
-                    >
-                        <FontAwesomeIcon icon={faHeart} /> Wishlist
-                    </button>
+                            </div>
+                            <button 
+                                onClick={() => addToWishlist(currentGame.id)}
+                                className="w-full bg-pink-600/10 hover:bg-pink-600/20 text-pink-500 border border-pink-500/30 font-bold py-2 rounded-lg transition flex items-center justify-center gap-2"
+                            >
+                                <FontAwesomeIcon icon={faHeart} /> Wishlist
+                            </button>
+                        </>
+                    )}
+                    
                     <button 
                         onClick={nextGame}
                         className="w-full bg-steam-accent hover:bg-blue-500 text-white font-bold py-4 rounded-xl transition flex items-center justify-center gap-3 shadow-xl transform active:scale-95 mt-4"

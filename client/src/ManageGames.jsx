@@ -3,8 +3,10 @@ import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash, faPlusCircle, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { useTheme } from './context/ThemeContext';
 
 const ManageGames = ({ user }) => {
+  const { theme } = useTheme();
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -174,44 +176,46 @@ const ManageGames = ({ user }) => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 text-white bg-steam-dark min-h-screen">
-      <h2 className="text-3xl font-bold mb-6 text-steam-accent border-b border-gray-700 pb-2">Manage Games</h2>
+    <div className={`container mx-auto px-4 py-8 ${theme.colors.text} ${theme.colors.bg} min-h-screen`}>
+      <h2 className={`text-3xl font-bold mb-6 ${theme.colors.accent} border-b ${theme.colors.border} pb-2`}>Manage Games</h2>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Form Section */}
-        <div className="bg-steam-light p-6 rounded-lg shadow-lg border border-gray-700 h-fit">
-          <h3 className="text-xl font-semibold mb-4 text-white">{isEditing ? 'Edit Game' : 'Add New Game'}</h3>
+        <div className={`${theme.colors.card} p-6 rounded-lg shadow-lg border ${theme.colors.border} h-fit`}>
+          <h3 className={`text-xl font-semibold mb-4 ${theme.colors.text}`}>{isEditing ? 'Edit Game' : 'Add New Game'}</h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-gray-400 text-sm mb-1">Title</label>
-              <input name="title" value={formData.title} onChange={handleChange} required className="w-full bg-steam-dark border border-gray-600 rounded p-2 text-white focus:border-steam-accent outline-none" />
+              <label className="block opacity-50 text-sm mb-1">Title</label>
+              <input name="title" value={formData.title} onChange={handleChange} required className={`w-full ${theme.colors.bg} border ${theme.colors.border} rounded p-2 ${theme.colors.text} focus:border-blue-500 outline-none`} />
             </div>
             <div>
-              <label className="block text-gray-400 text-sm mb-1">Description</label>
-              <textarea name="description" value={formData.description} onChange={handleChange} required className="w-full bg-steam-dark border border-gray-600 rounded p-2 text-white focus:border-steam-accent outline-none h-24" />
+              <label className="block opacity-50 text-sm mb-1">Description</label>
+              <textarea name="description" value={formData.description} onChange={handleChange} required className={`w-full ${theme.colors.bg} border ${theme.colors.border} rounded p-2 ${theme.colors.text} focus:border-blue-500 outline-none h-24`} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <label className="block opacity-50 text-sm mb-1">Price</label>
+                    <input type="number" name="price" value={formData.price} onChange={handleChange} required className={`w-full ${theme.colors.bg} border ${theme.colors.border} rounded p-2 ${theme.colors.text} focus:border-blue-500 outline-none`} step="0.01" />
+                </div>
+                <div>
+                    <label className="block opacity-50 text-sm mb-1">Discount (%)</label>
+                    <input type="number" name="discount" value={formData.discount} onChange={handleChange} className={`w-full ${theme.colors.bg} border ${theme.colors.border} rounded p-2 ${theme.colors.text} focus:border-blue-500 outline-none`} min="0" max="100" />
+                </div>
             </div>
             <div>
-              <label className="block text-gray-400 text-sm mb-1">Price</label>
-              <input type="number" name="price" value={formData.price} onChange={handleChange} required className="w-full bg-steam-dark border border-gray-600 rounded p-2 text-white focus:border-steam-accent outline-none" step="0.01" />
-            </div>
-            <div>
-              <label className="block text-gray-400 text-sm mb-1">Discount (%)</label>
-              <input type="number" name="discount" value={formData.discount} onChange={handleChange} className="w-full bg-steam-dark border border-gray-600 rounded p-2 text-white focus:border-steam-accent outline-none" min="0" max="100" />
-            </div>
-            <div>
-              <label className="block text-gray-400 text-sm mb-1">Game Image</label>
+              <label className="block opacity-50 text-sm mb-1">Game Image</label>
               <div className="flex gap-4 mb-2">
                 <button 
                   type="button"
                   onClick={() => setUploadMode('url')}
-                  className={`px-3 py-1 rounded text-sm ${uploadMode === 'url' ? 'bg-steam-accent text-white' : 'bg-gray-700 text-gray-400'}`}
+                  className={`px-3 py-1 rounded text-sm transition ${uploadMode === 'url' ? 'bg-blue-600 text-white' : `bg-gray-700/50 ${theme.colors.text} opacity-50`}`}
                 >
                   Image URL
                 </button>
                 <button 
                   type="button"
                   onClick={() => setUploadMode('file')}
-                  className={`px-3 py-1 rounded text-sm ${uploadMode === 'file' ? 'bg-steam-accent text-white' : 'bg-gray-700 text-gray-400'}`}
+                  className={`px-3 py-1 rounded text-sm transition ${uploadMode === 'file' ? 'bg-blue-600 text-white' : `bg-gray-700/50 ${theme.colors.text} opacity-50`}`}
                 >
                   Upload File
                 </button>
@@ -223,30 +227,30 @@ const ManageGames = ({ user }) => {
                   value={formData.imageUrl} 
                   onChange={handleChange} 
                   placeholder="https://example.com/image.jpg"
-                  className="w-full bg-steam-dark border border-gray-600 rounded p-2 text-white focus:border-steam-accent outline-none"
+                  className={`w-full ${theme.colors.bg} border ${theme.colors.border} rounded p-2 ${theme.colors.text} focus:border-blue-500 outline-none`}
                 />
               ) : (
-                <div className="border border-dashed border-gray-600 rounded p-4 text-center hover:border-steam-accent transition">
+                <div className={`border border-dashed ${theme.colors.border} rounded p-4 text-center hover:border-blue-500 transition`}>
                   <input 
                     type="file" 
                     accept="image/*"
                     onChange={e => setImageFile(e.target.files[0])}
-                    className="w-full text-gray-300 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-steam-accent file:text-white hover:file:bg-blue-500"
+                    className={`w-full ${theme.colors.text} text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500`}
                   />
-                  {imageFile && <div className="text-green-400 text-xs mt-2">Selected: {imageFile.name}</div>}
+                  {imageFile && <div className="text-green-500 text-xs mt-2 font-bold">Selected: {imageFile.name}</div>}
                 </div>
               )}
             </div>
             <div>
-              <label className="block text-gray-400 text-sm mb-1">Categories (comma separated)</label>
-              <input name="categoryNames" value={formData.categoryNames} onChange={handleChange} placeholder="Action, RPG, Indie" className="w-full bg-steam-dark border border-gray-600 rounded p-2 text-white focus:border-steam-accent outline-none" />
+              <label className="block opacity-50 text-sm mb-1">Categories (comma separated)</label>
+              <input name="categoryNames" value={formData.categoryNames} onChange={handleChange} placeholder="Action, RPG, Indie" className={`w-full ${theme.colors.bg} border ${theme.colors.border} rounded p-2 ${theme.colors.text} focus:border-blue-500 outline-none`} />
             </div>
             
             <div className="flex gap-2 pt-2">
               <button 
                 type="submit" 
                 disabled={isUploading}
-                className="flex-1 bg-steam-accent hover:bg-blue-400 text-white font-bold py-2 rounded transition disabled:opacity-50"
+                className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded transition disabled:opacity-50 shadow-lg"
               >
                 {isUploading ? 'Uploading & Saving...' : (isEditing ? 'Update Game' : 'Create Game')}
               </button>
@@ -261,22 +265,22 @@ const ManageGames = ({ user }) => {
 
         {/* List Section */}
         <div className="lg:col-span-2 space-y-4">
-          <h3 className="text-xl font-semibold mb-4 text-white">Existing Games</h3>
+          <h3 className={`text-xl font-semibold mb-4 ${theme.colors.text}`}>Existing Games</h3>
           
           {loading ? (
             <div className="flex justify-center py-10">
-               <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-steam-accent"></div>
+               <div className={`animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 ${theme.colors.accent}`}></div>
             </div>
           ) : (
             <>
               <div className="grid gap-4">
                 {games.map(game => (
-                  <div key={game.id} className="bg-steam-light p-4 rounded-lg flex justify-between items-center border border-gray-700 hover:border-steam-accent/50 transition">
+                  <div key={game.id} className={`${theme.colors.card} p-4 rounded-lg flex justify-between items-center border ${theme.colors.border} hover:border-blue-500/50 transition shadow-sm`}>
                     <div className="flex items-center gap-4">
-                      {game.imageUrl && <img src={game.imageUrl} alt={game.title} className="w-16 h-16 object-cover rounded" />}
+                      {game.imageUrl && <img src={game.imageUrl} alt={game.title} className="w-16 h-16 object-cover rounded shadow-md" />}
                       <div>
-                        <h4 className="font-bold text-lg text-white">{game.title}</h4>
-                        <p className="text-sm text-gray-400">${game.price} - {game.categories?.map(c => c.name).join(', ')}</p>
+                        <h4 className={`font-bold text-lg ${theme.colors.text}`}>{game.title}</h4>
+                        <p className="text-sm opacity-60">${game.price} - {game.categories?.map(c => c.name).join(', ')}</p>
                       </div>
                     </div>
                     <div className="flex gap-2">
@@ -287,12 +291,12 @@ const ManageGames = ({ user }) => {
                                 setPatchData({ ...patchData, gameId: game.id });
                                 setIsPatchModalOpen(true);
                             }}
-                            className="bg-green-600 hover:bg-green-500 text-white px-3 py-1 rounded text-sm transition"
+                            className="bg-green-600 hover:bg-green-500 text-white px-3 py-1 rounded text-sm transition shadow-sm"
                           >
                               <FontAwesomeIcon icon={faPlusCircle} /> Update
                           </button>
-                          <button onClick={() => handleEdit(game)} className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-sm transition"><FontAwesomeIcon icon={faEdit} /> Edit</button>
-                          <button onClick={() => handleDelete(game.id)} className="bg-red-600 hover:bg-red-500 text-white px-3 py-1 rounded text-sm transition"><FontAwesomeIcon icon={faTrash} /> Delete</button>
+                          <button onClick={() => handleEdit(game)} className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-sm transition shadow-sm"><FontAwesomeIcon icon={faEdit} /> Edit</button>
+                          <button onClick={() => handleDelete(game.id)} className="bg-red-600 hover:bg-red-500 text-white px-3 py-1 rounded text-sm transition shadow-sm"><FontAwesomeIcon icon={faTrash} /> Delete</button>
                         </>
                       )}
                     </div>
@@ -306,15 +310,15 @@ const ManageGames = ({ user }) => {
                   <button 
                     onClick={() => goToPage(currentPage - 1)}
                     disabled={currentPage === 1}
-                    className="px-3 py-1 bg-steam-light text-white rounded text-sm disabled:opacity-30"
+                    className={`px-3 py-1 ${theme.colors.card} ${theme.colors.text} rounded text-sm disabled:opacity-30 border ${theme.colors.border}`}
                   >
                     Prev
                   </button>
-                  <span className="text-sm text-gray-400">Page {currentPage} of {totalPages}</span>
+                  <span className="text-sm opacity-50">Page {currentPage} of {totalPages}</span>
                   <button 
                     onClick={() => goToPage(currentPage + 1)}
                     disabled={currentPage === totalPages}
-                    className="px-3 py-1 bg-steam-light text-white rounded text-sm disabled:opacity-30"
+                    className={`px-3 py-1 ${theme.colors.card} ${theme.colors.text} rounded text-sm disabled:opacity-30 border ${theme.colors.border}`}
                   >
                     Next
                   </button>
@@ -328,44 +332,44 @@ const ManageGames = ({ user }) => {
       {/* Patch Note Modal */}
       {isPatchModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-              <div className="bg-steam-light border border-gray-700 rounded-xl shadow-2xl max-w-2xl w-full p-8 animate-fadeIn">
+              <div className={`${theme.colors.card} border ${theme.colors.border} rounded-xl shadow-2xl max-w-2xl w-full p-8 animate-fadeIn`}>
                   <div className="flex justify-between items-center mb-6">
-                      <h3 className="text-2xl font-bold text-white">Post Game Update / Patch Note</h3>
-                      <button onClick={() => setIsPatchModalOpen(false)} className="text-gray-400 hover:text-white transition text-2xl">
+                      <h3 className={`text-2xl font-bold ${theme.colors.text}`}>Post Game Update</h3>
+                      <button onClick={() => setIsPatchModalOpen(false)} className="opacity-50 hover:opacity-100 transition text-2xl">
                           <FontAwesomeIcon icon={faTimes} />
                       </button>
                   </div>
 
                   <form onSubmit={handlePostPatch} className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                              <label className="block text-gray-400 text-xs font-bold uppercase mb-1 tracking-wider">Update Title</label>
+                              <label className="block opacity-50 text-xs font-bold uppercase mb-1 tracking-wider">Update Title</label>
                               <input 
                                   value={patchData.title}
                                   onChange={e => setPatchData({...patchData, title: e.target.value})}
                                   required
                                   placeholder="e.g. The Big Summer Update"
-                                  className="w-full bg-steam-dark border border-gray-600 rounded p-3 text-white focus:border-steam-accent outline-none transition"
+                                  className={`w-full ${theme.colors.bg} border ${theme.colors.border} rounded p-3 ${theme.colors.text} focus:border-blue-500 outline-none transition`}
                               />
                           </div>
                           <div>
-                              <label className="block text-gray-400 text-xs font-bold uppercase mb-1 tracking-wider">Version</label>
+                              <label className="block opacity-50 text-xs font-bold uppercase mb-1 tracking-wider">Version</label>
                               <input 
                                   value={patchData.version}
                                   onChange={e => setPatchData({...patchData, version: e.target.value})}
                                   placeholder="e.g. v1.2.4"
-                                  className="w-full bg-steam-dark border border-gray-600 rounded p-3 text-white focus:border-steam-accent outline-none transition"
+                                  className={`w-full ${theme.colors.bg} border ${theme.colors.border} rounded p-3 ${theme.colors.text} focus:border-blue-500 outline-none transition`}
                               />
                           </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                              <label className="block text-gray-400 text-xs font-bold uppercase mb-1 tracking-wider">Update Type</label>
+                              <label className="block opacity-50 text-xs font-bold uppercase mb-1 tracking-wider">Update Type</label>
                               <select 
                                   value={patchData.type}
                                   onChange={e => setPatchData({...patchData, type: e.target.value})}
-                                  className="w-full bg-steam-dark border border-gray-600 rounded p-3 text-white focus:border-steam-accent outline-none transition"
+                                  className={`w-full ${theme.colors.bg} border ${theme.colors.border} rounded p-3 ${theme.colors.text} focus:border-blue-500 outline-none transition`}
                               >
                                   <option value="UPDATE">Standard Update</option>
                                   <option value="HOTFIX">Hotfix / Bugfix</option>
@@ -376,25 +380,25 @@ const ManageGames = ({ user }) => {
                       </div>
 
                       <div>
-                          <label className="block text-gray-400 text-xs font-bold uppercase mb-1 tracking-wider">Content / Patch Notes</label>
+                          <label className="block opacity-50 text-xs font-bold uppercase mb-1 tracking-wider">Content / Patch Notes</label>
                           <textarea 
                               value={patchData.content}
                               onChange={e => setPatchData({...patchData, content: e.target.value})}
                               required
                               placeholder="Describe what's new in this version..."
-                              className="w-full bg-steam-dark border border-gray-600 rounded p-3 text-white focus:border-steam-accent outline-none transition h-48"
+                              className={`w-full ${theme.colors.bg} border ${theme.colors.border} rounded p-3 ${theme.colors.text} focus:border-blue-500 outline-none transition h-48`}
                           />
                       </div>
 
                       <div className="flex gap-4 pt-4">
                           <button 
                             type="submit"
-                            className="flex-1 bg-steam-accent hover:bg-blue-500 text-white font-bold py-3 rounded-lg shadow-lg transition"
+                            className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg shadow-lg transition"
                           >
                               Post Update
                           </button>
                           <button 
-                            type="button"
+                            type="button" 
                             onClick={() => setIsPatchModalOpen(false)}
                             className="flex-1 bg-gray-700 hover:bg-gray-600 text-gray-300 font-bold py-3 rounded-lg transition"
                           >

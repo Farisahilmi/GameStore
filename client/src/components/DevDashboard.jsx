@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faEdit, faTrash, faCode, faGamepad, faCheckCircle, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faEdit, faTrash, faCode, faGamepad } from '@fortawesome/free-solid-svg-icons';
 
 const DevDashboard = () => {
   const [projects, setProjects] = useState([]);

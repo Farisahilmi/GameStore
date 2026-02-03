@@ -92,8 +92,7 @@ const updateProject = async (req, res, next) => {
     if (followers.length > 0) {
         const message = `Publisher ${updatedProject.publisher.name} updated project "${updatedProject.title}" to status: ${updatedProject.status} (${updatedProject.progress}%)`;
         for (const follower of followers) {
-            await notificationService.sendNotification(
-                req.app,
+            await notificationService.createNotification(
                 follower.userId,
                 message,
                 'DEV_UPDATE'

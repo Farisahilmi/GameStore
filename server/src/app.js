@@ -22,6 +22,8 @@ const saleRoutes = require('./routes/saleRoutes');
 const friendRoutes = require('./routes/friendRoutes');
 const activityRoutes = require('./routes/activityRoutes');
 const gameUpdateRoutes = require('./routes/gameUpdateRoutes');
+const walletRoutes = require('./routes/walletRoutes');
+const voucherRoutes = require('./routes/voucherRoutes');
 
 const apiKeyMiddleware = require('./middlewares/apiKeyMiddleware');
 
@@ -61,6 +63,8 @@ app.use('/api/sales', saleRoutes);
 app.use('/api/friends', friendRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/game-updates', gameUpdateRoutes);
+app.use('/api/wallet', walletRoutes);
+app.use('/api/vouchers', voucherRoutes);
 
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to GameStore API' });

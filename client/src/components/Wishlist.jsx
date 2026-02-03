@@ -4,8 +4,10 @@ import GameCard from './GameCard';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import { useTheme } from '../context/ThemeContext';
 
-const Wishlist = ({ addToCart }) => {
+const Wishlist = ({ addToCart, library }) => {
+  const { theme } = useTheme();
   const [wishlist, setWishlist] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -42,29 +44,33 @@ const Wishlist = ({ addToCart }) => {
   };
 
   if (loading) return (
-    <div className="flex justify-center items-center h-screen bg-steam-dark">
-      <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-steam-accent"></div>
+    <div className={`flex justify-center items-center h-screen ${theme.colors.bg}`}>
+      <div className={`animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 ${theme.colors.accent}`}></div>
     </div>
   );
 
   return (
-    <div className="container mx-auto px-4 py-8 min-h-screen bg-steam-dark">
-      <h2 className="text-3xl font-bold text-white mb-8 border-b border-gray-700 pb-4">My Wishlist</h2>
+    <div className={`container mx-auto px-4 py-8 min-h-screen ${theme.colors.bg}`}>
+      <h2 className={`text-3xl font-bold ${theme.colors.text} mb-8 border-b ${theme.colors.border} pb-4`}>My Wishlist</h2>
       
       {wishlist.length === 0 ? (
         <div className="text-center py-20">
-            <h3 className="text-2xl text-gray-400 mb-4">Your wishlist is empty</h3>
-            <Link to="/" className="text-steam-accent hover:underline">Browse Games</Link>
+            <h3 className={`text-2xl opacity-60 mb-4 ${theme.colors.text}`}>Your wishlist is empty</h3>
+            <Link to="/" className={`${theme.colors.accent} hover:underline`}>Browse Games</Link>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {wishlist.map(item => (
             <div key={item.id} className="relative group">
                 <Link to={`/games/${item.gameId}`} className="block h-full">
-                    <GameCard game={item.game} onBuy={(e) => {
-                        e.preventDefault();
-                        addToCart(item.game);
-                    }} />
+                    <GameCard 
+                        game={item.game} 
+                        isOwned={library?.includes(item.gameId)}
+                        onBuy={(e) => {
+                            e.preventDefault();
+                            addToCart(item.game);
+                        }} 
+                    />
                 </Link>
                 <button 
                     onClick={(e) => {

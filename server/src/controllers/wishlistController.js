@@ -46,6 +46,7 @@ const getWishlist = async (req, res, next) => {
 const addToWishlist = async (req, res, next) => {
   try {
     const { gameId } = req.body;
+    const userId = req.user.id;
     
     // Check if game exists
     const game = await prisma.game.findUnique({
@@ -58,11 +59,27 @@ const addToWishlist = async (req, res, next) => {
       throw error;
     }
 
+    // Check if user already owns the game in library
+    const owned = await prisma.library.findUnique({
+        where: {
+            userId_gameId: {
+                userId,
+                gameId: parseInt(gameId)
+            }
+        }
+    });
+
+    if (owned) {
+        const error = new Error('You already own this game');
+        error.statusCode = 400;
+        throw error;
+    }
+
     // Check if already in wishlist
     const exists = await prisma.wishlist.findUnique({
       where: {
         userId_gameId: {
-          userId: req.user.id,
+          userId,
           gameId: parseInt(gameId)
         }
       }

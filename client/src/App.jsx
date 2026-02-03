@@ -5,6 +5,7 @@ import { Toaster, toast } from 'react-hot-toast';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faBolt, faCheckCircle, faBook, faGamepad, faRocket, faArrowRight } from '@fortawesome/free-solid-svg-icons';
 import { io } from 'socket.io-client';
+import { motion } from 'framer-motion';
 
 import ManageGames from './ManageGames.jsx';
 import ManageUsers from './ManageUsers.jsx';
@@ -16,6 +17,7 @@ import GameDetails from './components/GameDetails';
 import Cart from './components/Cart';
 import Wishlist from './components/Wishlist';
 import Library from './components/Library';
+import Wallet from './components/Wallet';
 import Settings from './components/Settings';
 import DevDashboard from './components/DevDashboard';
 import DevUpdatesFeed from './components/DevUpdatesFeed';
@@ -23,7 +25,10 @@ import PublisherProfile from './components/PublisherProfile';
 
 // --- Page Components ---
 
+import { GameCardSkeleton } from './components/Skeleton';
+
 const Home = ({ addToCart, user, directPurchase, library }) => {
+  const { theme } = useTheme();
   const [searchParams] = useSearchParams();
   const [games, setGames] = useState([]);
   const [recommendedGames, setRecommendedGames] = useState([]);
@@ -106,21 +111,21 @@ const Home = ({ addToCart, user, directPurchase, library }) => {
   };
 
   if (loading && games.length === 0) return (
-    <div className="flex justify-center items-center h-screen bg-steam-dark">
-      <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-steam-accent"></div>
+    <div className={`flex justify-center items-center h-screen ${theme.colors.bg}`}>
+      <div className={`animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 ${theme.colors.accent}`}></div>
     </div>
   );
 
   return (
-    <div className="relative min-h-screen bg-steam-dark overflow-hidden">
+    <div className={`relative min-h-screen ${theme.colors.bg} overflow-hidden transition-colors duration-500`}>
       {/* Animated Background */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#171a21] via-[#1b2838] to-[#171a21] animate-gradient-slow opacity-80"></div>
+          <div className={`absolute inset-0 bg-gradient-to-br ${theme.colors.gradient} animate-gradient-slow opacity-80`}></div>
           
           {/* Ambient Blobs */}
           <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-600/20 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob"></div>
           <div className="absolute top-[-10%] right-[-10%] w-96 h-96 bg-purple-600/20 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-          <div className="absolute bottom-[-10%] left-[20%] w-96 h-96 bg-steam-accent/20 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+          <div className={`absolute bottom-[-10%] left-[20%] w-96 h-96 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob animation-delay-4000 ${theme.colors.accent.replace('text-', 'bg-').replace('600', '600/20').replace('400', '400/20')}`}></div>
 
           {/* Floating Controller Shapes (PlayStation & Xbox Vibes) - More & Random */}
           
@@ -142,7 +147,7 @@ const Home = ({ addToCart, user, directPurchase, library }) => {
 
           {/* Group 3: Extra Random Particles (Small & Fast) */}
           <div className="absolute top-[5%] left-[40%] opacity-40 animate-float-fast filter drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]" style={{ animationDelay: '1.5s' }}>
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={theme.name === 'Clean Light' ? '#000' : '#fff'} strokeWidth="2">
                   <rect x="4" y="4" width="16" height="16" />
               </svg>
           </div>
@@ -152,8 +157,8 @@ const Home = ({ addToCart, user, directPurchase, library }) => {
           <div className="absolute top-[20%] left-[60%] w-8 h-8 border-2 border-cyan-500/40 rotate-45 animate-float-medium" style={{ animationDelay: '4.5s' }}></div>
           
           {/* Group 4: Big Blur Shapes (Depth) */}
-          <div className="absolute top-[45%] right-[5%] text-[150px] text-white/5 animate-float-slow rotate-12 blur-sm" style={{ animationDelay: '8s' }}>■</div>
-          <div className="absolute bottom-[10%] left-[30%] text-[120px] text-white/5 animate-float-slow -rotate-12 blur-sm" style={{ animationDelay: '9s' }}>●</div>
+          <div className={`absolute top-[45%] right-[5%] text-[150px] ${theme.name === 'Clean Light' ? 'text-black/5' : 'text-white/5'} animate-float-slow rotate-12 blur-sm`} style={{ animationDelay: '8s' }}>■</div>
+          <div className={`absolute bottom-[10%] left-[30%] text-[120px] ${theme.name === 'Clean Light' ? 'text-black/5' : 'text-white/5'} animate-float-slow -rotate-12 blur-sm`} style={{ animationDelay: '9s' }}>●</div>
       </div>
 
       <div className="relative z-10 pb-20">
@@ -163,23 +168,35 @@ const Home = ({ addToCart, user, directPurchase, library }) => {
         
         {/* Discovery Queue Banner */}
         {user && (
-            <div className="mb-12 bg-gradient-to-r from-blue-600/40 via-steam-accent/40 to-purple-600/40 backdrop-blur-md rounded-2xl p-8 border border-white/10 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl animate-fadeIn">
-                <div className="flex items-center gap-6 text-center md:text-left">
-                    <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center text-3xl shadow-inner border border-white/20">
-                        <FontAwesomeIcon icon={faRocket} className="text-white animate-bounce-slow" />
-                    </div>
+            <motion.div 
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className={`mb-20 ${theme.colors.glass} ${theme.colors.shadow} rounded-[3rem] p-8 md:p-14 border ${theme.colors.border} flex flex-col lg:flex-row items-center justify-between gap-12 relative overflow-hidden group`}
+            >
+                {/* Decorative background shape */}
+                <div className={`absolute -right-20 -top-20 w-80 h-80 ${theme.colors.accent.replace('text-', 'bg-')}/5 rounded-full blur-[100px] group-hover:scale-150 transition-all duration-1000`}></div>
+                
+                <div className="flex flex-col md:flex-row items-center gap-10 text-center md:text-left relative z-10">
+                    <motion.div 
+                        animate={{ rotate: [0, 5, -5, 0] }}
+                        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                        className={`w-24 h-24 bg-gradient-to-br from-white/10 to-white/0 rounded-3xl flex items-center justify-center text-5xl shadow-2xl border border-white/20 backdrop-blur-xl transform transition-transform group-hover:scale-110 group-hover:rotate-6`}
+                    >
+                        <FontAwesomeIcon icon={faRocket} className={`${theme.colors.accent} drop-shadow-lg`} />
+                    </motion.div>
                     <div>
-                        <h3 className="text-2xl font-bold text-white mb-1">Your Discovery Queue</h3>
-                        <p className="text-blue-100/70">Explore games we think you'll love. New games every day!</p>
+                        <h3 className={`text-4xl md:text-5xl font-black ${theme.colors.text} mb-4 tracking-tighter italic`}>Your <span className={theme.colors.accent}>Discovery Queue</span></h3>
+                        <p className={`text-lg max-w-lg leading-relaxed font-medium opacity-60`}>Explore games we think you&apos;ll love. New adventures waiting for you every day!</p>
                     </div>
                 </div>
                 <Link 
                     to="/discovery" 
-                    className="bg-white text-blue-600 hover:bg-blue-50 px-10 py-3 rounded-full font-extrabold transition transform hover:scale-105 shadow-xl whitespace-nowrap"
+                    className={`relative z-10 bg-gradient-to-r ${theme.name === 'Clean Light' ? 'from-blue-600 to-indigo-600' : 'from-white to-gray-200'} ${theme.name === 'Clean Light' ? 'text-white' : 'text-black'} px-14 py-5 rounded-[2rem] font-black transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 shadow-2xl whitespace-nowrap flex items-center gap-4 active:scale-95 text-lg`}
                 >
-                    Start Exploring <FontAwesomeIcon icon={faArrowRight} className="ml-2" />
+                    Start Exploring <FontAwesomeIcon icon={faArrowRight} className="text-sm" />
                 </Link>
-            </div>
+            </motion.div>
         )}
 
         {/* Recommended Section */}
@@ -275,13 +292,19 @@ const Home = ({ addToCart, user, directPurchase, library }) => {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
             {/* Main Content: Games */}
             <div className="lg:col-span-3">
-              {games.length === 0 ? (
-                  <div className="text-center text-gray-400 py-20">No games found.</div>
+              {loading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {[...Array(8)].map((_, i) => <GameCardSkeleton key={i} />)}
+                </div>
+              ) : games.length === 0 ? (
+                <div className="text-center py-20 opacity-50">
+                  <p className="text-xl">No games found.</p>
+                </div>
               ) : (
-                  <>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-12">
+                <>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {games.map(game => (
-                        <Link to={`/games/${game.id}`} key={game.id} className="block h-full">
+                        <Link to={`/games/${game.id}`} key={game.id}>
                           <GameCard 
                               game={game} 
                               isOwned={library.includes(game.id)}
@@ -464,39 +487,38 @@ import ActivityFeed from './components/ActivityFeed';
 import UserProfile from './components/UserProfile';
 import { Support, FAQ, SystemStatus, Contact, Privacy, Terms, Cookies, Refunds } from './components/StaticPages';
 
-const App = () => {
-  const [user, setUser] = useState(null);
+import { ThemeProvider, useTheme } from './context/ThemeContext';
+
+const AppContent = ({ user, setUser, refreshUser }) => {
+  const { theme } = useTheme();
   const [cart, setCart] = useState([]);
   const [library, setLibrary] = useState([]); // Array of owned game IDs
   const [notifications, setNotifications] = useState([]);
   const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);
-      setUser(parsedUser);
-    }
-    
     const storedCart = localStorage.getItem('cart');
     if (storedCart) {
       setCart(JSON.parse(storedCart));
     }
   }, []);
 
+  const fetchLibrary = async () => {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        
+        const res = await axios.get('/api/library/my', {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        setLibrary(res.data.data.map(g => g.id));
+    } catch (err) {
+        console.error('Failed to fetch library for ownership check');
+    }
+  };
+
   useEffect(() => {
     if (user) {
-      const fetchLibrary = async () => {
-          try {
-              const token = localStorage.getItem('token');
-              const res = await axios.get('/api/library/my', {
-                  headers: { Authorization: `Bearer ${token}` }
-              });
-              setLibrary(res.data.data.map(g => g.id));
-          } catch (err) {
-              console.error('Failed to fetch library for ownership check');
-          }
-      };
       fetchLibrary();
 
       const newSocket = io(import.meta.env.VITE_API_URL || 'http://localhost:3000');
@@ -536,6 +558,10 @@ const App = () => {
   }, [cart]);
 
   const addToCart = (game) => {
+    if (library.includes(game.id)) {
+      toast.error('You already own this game!');
+      return;
+    }
     if (cart.find(g => g.id === game.id)) {
       toast.error('Game is already in cart');
       return;
@@ -562,7 +588,7 @@ const App = () => {
           return;
       }
 
-      if (user.role === 'ADMIN' || user.role === 'PUBLISHER') {
+      if (user && (user.role === 'ADMIN' || user.role === 'PUBLISHER')) {
           toast.error('Admins and Publishers cannot buy games');
           return;
       }
@@ -575,7 +601,7 @@ const App = () => {
 
       const token = localStorage.getItem('token');
       try {
-          const res = await axios.post('/api/transactions', { 
+          await axios.post('/api/transactions', { 
               gameIds: [buyNowGame.id] 
           }, {
               headers: { Authorization: `Bearer ${token}` }
@@ -583,6 +609,7 @@ const App = () => {
           toast.success('Purchase successful!');
           setPurchaseSuccessGame(buyNowGame);
           setBuyNowGame(null);
+          fetchLibrary(); // Refresh library after purchase
       } catch (err) {
           toast.error(err.response?.data?.error || 'Purchase failed');
       }
@@ -604,17 +631,17 @@ const App = () => {
           color: '#fff',
         },
       }} />
-      <div className="bg-steam-dark min-h-screen text-steam-text font-sans flex flex-col relative">
+      <div className={`${theme.colors.bg} min-h-screen ${theme.colors.text} font-sans flex flex-col relative transition-colors duration-500`}>
         {buyNowGame && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-                <div className="bg-steam-light border border-gray-700 rounded-xl shadow-2xl max-w-md w-full p-6 animate-fadeIn">
-                    <h3 className="text-2xl font-bold text-white mb-4">Confirm Purchase</h3>
+                <div className={`${theme.colors.card} border ${theme.colors.border} rounded-xl shadow-2xl max-w-md w-full p-6 animate-fadeIn`}>
+                    <h3 className="text-2xl font-bold mb-4">Confirm Purchase</h3>
                     <div className="flex gap-4 mb-6">
                         <img src={buyNowGame.imageUrl} alt={buyNowGame.title} className="w-24 h-32 object-cover rounded shadow-md" />
                         <div>
-                            <h4 className="text-lg font-bold text-steam-accent mb-1">{buyNowGame.title}</h4>
-                            <div className="text-sm text-gray-400 mb-2">Standard Edition</div>
-                            <div className="text-2xl font-bold text-white">
+                            <h4 className={`text-lg font-bold ${theme.colors.accent} mb-1`}>{buyNowGame.title}</h4>
+                            <div className="text-sm opacity-70 mb-2">Standard Edition</div>
+                            <div className="text-2xl font-bold">
                                 ${Number(buyNowGame.finalPrice !== undefined ? buyNowGame.finalPrice : buyNowGame.price).toFixed(2)}
                             </div>
                         </div>
@@ -638,13 +665,13 @@ const App = () => {
         )}
         {purchaseSuccessGame && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-fadeIn">
-                <div className="bg-steam-light border border-gray-700 rounded-xl shadow-2xl max-w-lg w-full p-8 text-center">
+                <div className={`${theme.colors.card} border ${theme.colors.border} rounded-xl shadow-2xl max-w-lg w-full p-8 text-center`}>
                     <div className="text-green-500 text-6xl mb-6 scale-110">
                         <FontAwesomeIcon icon={faCheckCircle} />
                     </div>
-                    <h3 className="text-3xl font-bold text-white mb-2">Purchase Successful!</h3>
-                    <p className="text-gray-400 mb-8">
-                        <span className="text-steam-accent font-bold">{purchaseSuccessGame.title}</span> has been added to your library.
+                    <h3 className="text-3xl font-bold mb-2">Purchase Successful!</h3>
+                    <p className="opacity-70 mb-8">
+                        <span className={`${theme.colors.accent} font-bold`}>{purchaseSuccessGame.title}</span> has been added to your library.
                     </p>
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -679,31 +706,32 @@ const App = () => {
             <Route path="/" element={<Home addToCart={addToCart} user={user} directPurchase={directPurchase} library={library} />} />
             <Route path="/publisher/:id" element={<PublisherProfile />} />
             <Route path="/games/:id" element={<GameDetails addToCart={addToCart} directPurchase={directPurchase} library={library} />} />
-          <Route path="/cart" element={<Cart cart={cart} removeFromCart={removeFromCart} clearCart={clearCart} library={library} />} />
+          <Route path="/cart" element={<Cart cart={cart} removeFromCart={removeFromCart} clearCart={clearCart} library={library} refreshLibrary={fetchLibrary} refreshUser={refreshUser} user={user} />} />
           <Route path="/login" element={<Login setUser={setUser} />} />
           <Route path="/register" element={<Register setUser={setUser} />} />
           <Route path="/library" element={user ? <Library /> : <Login setUser={setUser} />} />
-          <Route path="/wishlist" element={user ? <Wishlist addToCart={addToCart} /> : <Login setUser={setUser} />} />
+          <Route path="/wallet" element={user ? <Wallet user={user} refreshUser={refreshUser} /> : <Login setUser={setUser} />} />
+          <Route path="/wishlist" element={user ? <Wishlist addToCart={addToCart} library={library} /> : <Login setUser={setUser} />} />
           <Route path="/settings" element={user ? <Settings user={user} setUser={setUser} /> : <Login setUser={setUser} />} />
           <Route path="/manage-games" element={
             user && (user.role === 'ADMIN' || user.role === 'PUBLISHER') ? 
             <ManageGames user={user} /> : 
-            <div className="text-center text-white mt-10">Access Denied</div>
+            <div className="text-center mt-10 opacity-70">Access Denied</div>
           } />
           <Route path="/admin-dashboard" element={
             user && (user.role === 'ADMIN' || user.role === 'PUBLISHER') ? 
             <AdminDashboard user={user} /> : 
-            <div className="text-center text-white mt-10">Access Denied</div>
+            <div className="text-center mt-10 opacity-70">Access Denied</div>
           } />
           <Route path="/dev-dashboard" element={
             user && (user.role === 'ADMIN' || user.role === 'PUBLISHER') ? 
             <DevDashboard /> : 
-            <div className="text-center text-white mt-10">Access Denied</div>
+            <div className="text-center mt-10 opacity-70">Access Denied</div>
           } />
           <Route path="/manage-users" element={
             user && user.role === 'ADMIN' ? 
             <ManageUsers /> : 
-            <div className="text-center text-white mt-10">Access Denied</div>
+            <div className="text-center mt-10 opacity-70">Access Denied</div>
           } />
           <Route path="/news" element={<News />} />
           <Route path="/news/:id" element={<NewsDetails />} />
@@ -724,6 +752,39 @@ const App = () => {
         <Footer />
       </div>
     </Router>
+  );
+};
+
+const App = () => {
+  const [user, setUser] = useState(null);
+  
+  const refreshUser = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const res = await axios.get('/api/users/profile', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const updatedUser = res.data.data;
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+    } catch (err) {
+      console.error('Failed to refresh user', err);
+    }
+  };
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+      refreshUser();
+    }
+  }, []);
+
+  return (
+    <ThemeProvider user={user}>
+      <AppContent user={user} setUser={setUser} refreshUser={refreshUser} />
+    </ThemeProvider>
   );
 };
 

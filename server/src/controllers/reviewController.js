@@ -106,6 +106,22 @@ const addReview = async (req, res, next) => {
       throw error;
     }
 
+    // Check if user owns the game
+    const ownership = await prisma.library.findUnique({
+      where: {
+        userId_gameId: {
+          userId: req.user.id,
+          gameId: parseInt(gameId)
+        }
+      }
+    });
+
+    if (!ownership && req.user.role !== 'ADMIN') {
+      const error = new Error('You must own this game to leave a review');
+      error.statusCode = 403;
+      throw error;
+    }
+
     // Check if user already reviewed this game
     const existingReview = await prisma.review.findFirst({
       where: {
@@ -141,8 +157,7 @@ const addReview = async (req, res, next) => {
     });
 
     if (game && game.publisherId) {
-      await notificationService.sendNotification(
-        req.app, 
+      await notificationService.createNotification(
         game.publisherId, 
         `User ${review.user.name} reviewed your game "${game.title}" with ${rating} stars.`, 
         'REVIEW'

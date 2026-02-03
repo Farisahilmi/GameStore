@@ -2,6 +2,8 @@ const axios = require('axios');
 
 const testAuth = async () => {
   const API_URL = 'http://localhost:3000/api/auth';
+  const API_KEY = '30035be176e0448bb45ce782377409ce';
+  axios.defaults.headers.common['x-api-key'] = API_KEY;
 
   try {
     console.log('--- Testing Register ---');

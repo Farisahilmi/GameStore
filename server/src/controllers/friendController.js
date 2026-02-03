@@ -33,7 +33,44 @@ const sendFriendRequest = async (req, res, next) => {
         });
 
         if (existing) {
-            const error = new Error('Friend request already exists or you are already friends');
+            if (existing.status === 'ACCEPTED') {
+                const error = new Error('You are already friends');
+                error.statusCode = 400;
+                throw error;
+            }
+
+            // Mutual request optimization: If B requests A while A has already requested B, automatically accept
+            if (existing.userId === parseInt(friendId) && existing.status === 'PENDING') {
+                await prisma.friend.update({
+                    where: { id: existing.id },
+                    data: { status: 'ACCEPTED' }
+                });
+
+                // Log activities for both
+                await prisma.activity.createMany({
+                    data: [
+                        {
+                            userId,
+                            type: 'FRIEND_ACCEPTED',
+                            message: `became friends with ${friend.name}`,
+                            metadata: JSON.stringify({ friendId: friend.id })
+                        },
+                        {
+                            userId: friend.id,
+                            type: 'FRIEND_ACCEPTED',
+                            message: `became friends with ${req.user.name}`,
+                            metadata: JSON.stringify({ friendId: userId })
+                        }
+                    ]
+                });
+
+                return res.status(200).json({
+                    success: true,
+                    message: 'Mutual request found! You are now friends.'
+                });
+            }
+
+            const error = new Error('Friend request already exists');
             error.statusCode = 400;
             throw error;
         }
@@ -86,11 +123,16 @@ const acceptFriendRequest = async (req, res, next) => {
             }
         });
 
+        const requester = await prisma.user.findUnique({
+            where: { id: request.userId },
+            select: { name: true }
+        });
+
         await prisma.activity.create({
             data: {
                 userId: userId,
                 type: 'FRIEND_ACCEPTED',
-                message: `became friends with someone`, // Ideally get requester name
+                message: `became friends with ${requester?.name || 'someone'}`,
                 metadata: JSON.stringify({ friendId: request.userId })
             }
         });

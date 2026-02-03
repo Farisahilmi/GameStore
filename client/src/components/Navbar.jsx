@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faShoppingCart, faSearch, faBell, faHeart, faExchangeAlt, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
+import { faShoppingCart, faSearch, faBell, faHeart, faExchangeAlt, faWallet, faGamepad, faCog, faRocket } from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'react-hot-toast';
+import { useTheme } from '../context/ThemeContext';
 
 const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications }) => {
   const navigate = useNavigate();
+  const { theme, currentTheme } = useTheme();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -14,6 +17,13 @@ const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications 
   const [userSearchResults, setUserSearchResults] = useState([]);
   const [pendingRequests, setPendingRequests] = useState([]);
   const [wishlistCount, setWishlistCount] = useState(0);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
       const searchUsers = async () => {
@@ -98,7 +108,7 @@ const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications 
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchTerm.trim()) {
-        navigate(`/?search=${encodeURIComponent(searchTerm)}`);
+        navigate(`/browse?search=${encodeURIComponent(searchTerm)}`);
     }
   };
 
@@ -151,58 +161,74 @@ const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications 
   };
 
   return (
-    <nav className="bg-steam-light p-4 border-b border-gray-800 sticky top-0 z-50 shadow-md">
-      <div className="container mx-auto flex justify-between items-center">
+    <nav className={`sticky top-0 z-50 transition-all duration-500 py-3 ${
+        scrolled 
+        ? `${theme.colors.glass} ${theme.colors.shadow} py-2` 
+        : 'bg-transparent'
+    }`}>
+      <div className="container mx-auto px-6 flex justify-between items-center">
         {/* Logo */}
-        <div className="flex items-center gap-8">
-            <Link to="/" className="text-2xl font-bold tracking-wider text-white flex items-center gap-2 group">
-                <span className="bg-gradient-to-br from-blue-600 to-steam-accent text-transparent bg-clip-text group-hover:to-blue-400 transition">GAMESTORE</span>
+        <div className="flex items-center gap-12">
+            <Link to="/" className={`text-2xl font-bold tracking-tighter ${theme.colors.text} flex items-center gap-3 group`}>
+                <motion.div 
+                    whileHover={{ rotate: 12, scale: 1.1 }}
+                    className={`w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-xl shadow-blue-500/20`}
+                >
+                    <span className="text-xl font-black">G</span>
+                </motion.div>
+                <span className={`hidden sm:block bg-gradient-to-r ${currentTheme === 'light' ? 'from-blue-700 to-indigo-600' : 'from-blue-400 to-indigo-300'} text-transparent bg-clip-text font-black tracking-tight`}>GAMESTORE</span>
             </Link>
 
             {/* Navigation Links */}
-            <div className="hidden lg:flex items-center gap-6">
-                <Link to="/" className="text-sm font-medium text-gray-300 hover:text-white transition uppercase tracking-wide">Store</Link>
-                <Link to="/news" className="text-sm font-medium text-gray-300 hover:text-white transition uppercase tracking-wide">News</Link>
+            <div className="hidden lg:flex items-center gap-8">
+                <Link to="/" className={`text-[10px] font-black opacity-60 hover:opacity-100 ${theme.colors.text} transition-all uppercase tracking-[0.25em] relative group`}>
+                    Store
+                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-current transition-all duration-300 group-hover:w-full opacity-50"></span>
+                </Link>
+                <Link to="/news" className={`text-[10px] font-black opacity-60 hover:opacity-100 ${theme.colors.text} transition-all uppercase tracking-[0.25em] relative group`}>
+                    News
+                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-current transition-all duration-300 group-hover:w-full opacity-50"></span>
+                </Link>
             </div>
         </div>
 
         {/* Main Search */}
-        <div className="flex-1 mx-2 md:mx-8 max-w-md hidden md:flex items-center gap-4">
+        <div className="flex-1 mx-8 max-w-lg hidden lg:flex items-center gap-4">
             <div className="relative flex-1">
                 <form onSubmit={handleSearch} className="relative">
                     <input 
                         type="text" 
-                        placeholder="Search games..." 
-                        className="w-full bg-steam-dark/50 text-white pl-10 pr-4 py-2 rounded-full border border-gray-700 focus:border-steam-accent focus:ring-1 focus:ring-steam-accent outline-none transition text-sm"
+                        placeholder="Search titles..." 
+                        className={`w-full ${theme.colors.input} ${theme.colors.text} pl-11 pr-4 py-2.5 rounded-2xl border ${theme.colors.border} focus:ring-4 ${theme.colors.ring} outline-none transition-all text-xs font-medium`}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
-                    <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm" />
+                    <FontAwesomeIcon icon={faSearch} className="absolute left-4 top-1/2 -translate-y-1/2 opacity-30 text-xs" />
                 </form>
             </div>
             
             {user && (
-                <div className="relative flex-1 max-w-[180px]">
+                <div className="relative flex-1 max-w-[200px]">
                     <input 
                         type="text" 
                         placeholder="Find friends..." 
-                        className="w-full bg-steam-dark/50 text-white pl-4 pr-4 py-2 rounded-full border border-gray-700 focus:border-blue-400 outline-none transition text-sm"
+                        className={`w-full ${theme.colors.input} ${theme.colors.text} pl-4 pr-4 py-2.5 rounded-2xl border ${theme.colors.border} focus:ring-4 ${theme.colors.ring} outline-none transition-all text-xs font-medium`}
                         value={userSearchTerm}
                         onChange={(e) => setUserSearchTerm(e.target.value)}
                     />
                     {userSearchResults.length > 0 && (
-                        <div className="absolute top-full left-0 w-full bg-steam-light border border-gray-700 rounded-lg shadow-2xl mt-2 z-50 overflow-hidden animate-fadeIn">
+                        <div className={`absolute top-full left-0 w-full ${theme.colors.card} border ${theme.colors.border} rounded-2xl ${theme.colors.shadow} mt-2 z-50 overflow-hidden animate-slideUp`}>
                             {userSearchResults.map(u => (
                                 <Link 
                                     key={u.id} 
                                     to={`/profile/${u.id}`}
                                     onClick={() => { setUserSearchTerm(''); setUserSearchResults([]); }}
-                                    className="flex items-center gap-3 p-3 hover:bg-steam-hover transition border-b border-gray-800 last:border-0"
+                                    className={`flex items-center gap-3 p-3 hover:bg-white/5 transition border-b ${theme.colors.border} last:border-0`}
                                 >
-                                    <div className="w-8 h-8 rounded-full bg-steam-accent flex items-center justify-center text-xs font-bold text-white">
+                                    <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${getProfileGradient(u.role)} flex items-center justify-center text-[10px] font-black text-white shadow-lg`}>
                                         {u.name.charAt(0).toUpperCase()}
                                     </div>
-                                    <span className="text-sm text-white truncate">{u.name}</span>
+                                    <span className={`text-xs font-bold ${theme.colors.text} truncate`}>{u.name}</span>
                                 </Link>
                             ))}
                         </div>
@@ -217,10 +243,10 @@ const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications 
             {user ? (
                 <>
                     {/* Wishlist Icon */}
-                    <Link to="/wishlist" className="relative text-gray-400 hover:text-pink-500 transition group flex items-center justify-center w-8 h-8">
+                    <Link to="/wishlist" className={`relative opacity-70 hover:opacity-100 ${theme.colors.text} hover:text-pink-500 transition group flex items-center justify-center w-8 h-8`}>
                         <FontAwesomeIcon icon={faHeart} className="text-lg" />
                         {wishlistCount > 0 && (
-                            <span className="absolute top-1 right-0.5 bg-red-500 w-2 h-2 rounded-full border border-steam-light animate-pulse"></span>
+                            <span className={`absolute top-1 right-0.5 bg-red-500 w-2 h-2 rounded-full border ${theme.colors.card} animate-pulse`}></span>
                         )}
                     </Link>
 
@@ -228,53 +254,69 @@ const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications 
                     <div className="relative flex items-center justify-center w-8 h-8">
                         <button 
                             onClick={() => setIsNotifOpen(!isNotifOpen)}
-                            className="text-gray-400 hover:text-yellow-400 transition relative flex items-center justify-center"
+                            className={`opacity-70 hover:opacity-100 ${theme.colors.text} hover:text-yellow-400 transition relative flex items-center justify-center`}
                         >
                             <FontAwesomeIcon icon={faBell} className="text-lg" />
                             {unreadCount > 0 && (
-                                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold w-3.5 h-3.5 flex items-center justify-center rounded-full border border-steam-light">
+                                <span className={`absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold w-3.5 h-3.5 flex items-center justify-center rounded-full border ${theme.colors.card}`}>
                                     {unreadCount}
                                 </span>
                             )}
                         </button>
 
-                        {isNotifOpen && (
-                            <div className="absolute top-full right-0 mt-2 w-[280px] md:w-80 bg-steam-light border border-gray-700 rounded-lg shadow-2xl z-50 overflow-hidden">
-                                <div className="p-3 border-b border-gray-700 font-bold text-sm text-white flex justify-between items-center">
-                                    <span>Notifications</span>
-                                    {unreadCount > 0 && <span className="text-[10px] bg-steam-accent px-1.5 py-0.5 rounded text-white">{unreadCount} New</span>}
+                            {isNotifOpen && (
+                            <div className={`absolute top-full right-0 mt-4 w-[320px] md:w-96 ${theme.colors.card} border ${theme.colors.border} rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-50 overflow-hidden animate-slideUp`}>
+                                <div className={`p-6 border-b ${theme.colors.border} flex justify-between items-center bg-gradient-to-r from-blue-600/10 to-transparent`}>
+                                    <h3 className={`font-black text-sm uppercase tracking-[0.2em] ${theme.colors.text}`}>Notifications</h3>
+                                    {unreadCount > 0 && (
+                                        <span className="bg-blue-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase">
+                                            {unreadCount} New
+                                        </span>
+                                    )}
                                 </div>
-                                <div className="max-h-96 overflow-y-auto">
+                                <div className="max-h-[400px] overflow-y-auto scrollbar-hide">
                                     {safeNotifications.length === 0 ? (
-                                        <div className="p-8 text-center text-gray-500 text-sm italic">No notifications yet</div>
+                                        <div className="p-12 text-center">
+                                            <div className="text-4xl mb-4 opacity-20">🔔</div>
+                                            <p className="opacity-40 text-sm italic font-medium">All caught up!</p>
+                                        </div>
                                     ) : (
                                         safeNotifications.map(n => (
                                             <div 
                                                 key={n.id} 
                                                 onClick={() => markAsRead(n.id)}
-                                                className={`p-4 border-b border-gray-800 hover:bg-steam-hover transition cursor-pointer ${!n.isRead ? 'bg-blue-500/10' : ''}`}
+                                                className={`p-5 border-b ${theme.colors.border} hover:bg-white/5 transition-all cursor-pointer relative group ${!n.isRead ? 'bg-blue-500/5' : ''}`}
                                             >
-                                                <div className="flex gap-3">
-                                                    <div className={`mt-1 w-2 h-2 rounded-full shrink-0 ${!n.isRead ? 'bg-blue-400' : 'bg-transparent'}`}></div>
-                                                    <div>
-                                                        <p className={`text-sm ${!n.isRead ? 'text-white' : 'text-gray-400'}`}>{n.message}</p>
-                                                        <span className="text-[10px] text-gray-500 mt-1 block">
-                                                            {new Date(n.createdAt).toLocaleDateString()}
-                                                        </span>
+                                                {!n.isRead && <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-600"></div>}
+                                                <div className="flex gap-4">
+                                                    <div className={`w-10 h-10 rounded-xl shrink-0 flex items-center justify-center font-black text-white shadow-lg ${!n.isRead ? 'bg-blue-600' : 'bg-gray-700 opacity-50'}`}>
+                                                        {n.message.charAt(0).toUpperCase()}
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <p className={`text-xs leading-relaxed ${!n.isRead ? 'font-bold ' + theme.colors.text : 'opacity-60'}`}>{n.message}</p>
+                                                        <div className="flex items-center justify-between mt-2">
+                                                            <span className="text-[9px] font-black uppercase tracking-widest opacity-30">
+                                                                {new Date(n.createdAt).toLocaleDateString()}
+                                                            </span>
+                                                            {!n.isRead && <span className="text-[8px] text-blue-400 font-black uppercase tracking-tighter">Mark as read</span>}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         ))
                                     )}
                                 </div>
+                                <div className={`p-4 text-center border-t ${theme.colors.border} bg-black/10`}>
+                                    <button className="text-[10px] font-black uppercase tracking-widest opacity-40 hover:opacity-100 transition-all">Clear all notifications</button>
+                                </div>
                             </div>
                         )}
                     </div>
 
-                    <Link to="/cart" className="relative text-gray-400 hover:text-green-400 transition group flex items-center justify-center w-8 h-8">
+                    <Link to="/cart" className={`relative opacity-70 hover:opacity-100 ${theme.colors.text} hover:text-green-400 transition group flex items-center justify-center w-8 h-8`}>
                         <span className="text-lg"><FontAwesomeIcon icon={faShoppingCart} /></span> 
                         {cartCount > 0 && (
-                            <span className="absolute -top-1 -right-1 bg-green-500 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full border border-steam-light">
+                            <span className={`absolute -top-1 -right-1 bg-green-500 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full border ${theme.colors.card}`}>
                                 {cartCount}
                             </span>
                         )}
@@ -286,104 +328,114 @@ const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications 
                             onClick={toggleDropdown}
                             className={`w-9 h-9 rounded-full bg-gradient-to-br ${getProfileGradient(user.role)} hover:opacity-90 flex items-center justify-center text-white transition focus:outline-none border border-white/20 shadow-lg`}
                         >
-                            <span className="font-bold text-sm">{user.name.charAt(0).toUpperCase()}</span>
-                        </button>
+                            <span className="font-bold text-sm">{(user.name || 'U').charAt(0).toUpperCase()}</span>
+                    </button>
 
-                        {isDropdownOpen && (
-                            <div className="absolute right-0 mt-2 w-48 bg-steam-light border border-gray-700 rounded shadow-xl py-2 z-50">
-                                <div className="px-4 py-2 border-b border-gray-700 mb-2">
-                                    <div className="text-sm font-bold text-white truncate">{user.name}</div>
-                                    <div className="text-xs text-gray-400 truncate flex items-center gap-1">
+                    {isDropdownOpen && (
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            className={`absolute right-0 mt-4 w-64 ${theme.colors.card} border ${theme.colors.border} rounded-3xl ${theme.colors.shadow} py-3 z-50 overflow-hidden`}
+                        >
+                            <div className={`px-6 py-4 border-b ${theme.colors.border} mb-2 bg-gradient-to-br from-white/5 to-transparent`}>
+                                <div className={`text-sm font-black ${theme.colors.text} truncate mb-0.5`}>{user.name || 'User'}</div>
+                                    <div className="text-[10px] font-black opacity-40 uppercase tracking-widest flex items-center gap-2">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
                                         {user.role}
                                     </div>
                                 </div>
 
-                                <Link to="/wishlist" onClick={() => setIsDropdownOpen(false)} className="block px-4 py-2 text-sm text-gray-300 hover:bg-steam-hover hover:text-white transition">
-                                    Wishlist
-                                </Link>
+                                <div className="px-2 space-y-1">
+                                    <Link to="/wallet" onClick={() => setIsDropdownOpen(false)} className={`flex items-center gap-3 px-4 py-2.5 text-xs font-bold rounded-xl hover:bg-white/5 ${theme.colors.text} transition-all`}>
+                                        <FontAwesomeIcon icon={faWallet} className="opacity-40 w-4" />
+                                        My Wallet <span className="ml-auto opacity-40">${Number(user.walletBalance || 0).toFixed(2)}</span>
+                                    </Link>
 
-                                <Link to="/library" onClick={() => setIsDropdownOpen(false)} className="block px-4 py-2 text-sm text-gray-300 hover:bg-steam-hover hover:text-white transition">
-                                    My Library
-                                </Link>
+                                    <Link to="/wishlist" onClick={() => setIsDropdownOpen(false)} className={`flex items-center gap-3 px-4 py-2.5 text-xs font-bold rounded-xl hover:bg-white/5 ${theme.colors.text} transition-all`}>
+                                        <FontAwesomeIcon icon={faHeart} className="opacity-40 w-4" />
+                                        Wishlist
+                                    </Link>
 
-                                {pendingRequests.length > 0 && (
-                                    <div className="px-4 py-2 border-t border-gray-700">
-                                        <p className="text-[10px] font-bold text-steam-accent uppercase tracking-widest mb-2">Friend Requests</p>
-                                        <div className="space-y-2">
-                                            {pendingRequests.map(req => (
-                                                <div key={req.id} className="flex items-center justify-between gap-2">
-                                                    <span className="text-xs text-white truncate">{req.user.name}</span>
-                                                    <button 
-                                                        onClick={() => handleAcceptFriend(req.id)}
-                                                        className="bg-steam-accent hover:bg-blue-500 text-white text-[10px] px-2 py-1 rounded transition"
-                                                    >
-                                                        Accept
-                                                    </button>
-                                                </div>
-                                            ))}
+                                    <Link to="/library" onClick={() => setIsDropdownOpen(false)} className={`flex items-center gap-3 px-4 py-2.5 text-xs font-bold rounded-xl hover:bg-white/5 ${theme.colors.text} transition-all`}>
+                                        <FontAwesomeIcon icon={faGamepad} className="opacity-40 w-4" />
+                                        My Library
+                                    </Link>
+                                </div>
+
+                                <div className={`mx-4 my-2 border-t ${theme.colors.border}`}></div>
+
+                                <div className="px-2 space-y-1">
+                                    <Link to="/settings" onClick={() => setIsDropdownOpen(false)} className={`flex items-center gap-3 px-4 py-2.5 text-xs font-bold rounded-xl hover:bg-white/5 ${theme.colors.text} transition-all`}>
+                                        <FontAwesomeIcon icon={faCog} className="opacity-40 w-4" />
+                                        Settings & Profile
+                                    </Link>
+
+                                    {user.role === 'PUBLISHER' && (
+                                        <Link to="/dev-dashboard" onClick={() => setIsDropdownOpen(false)} className={`flex items-center gap-3 px-4 py-2.5 text-xs font-black rounded-xl hover:bg-blue-500/10 text-blue-400 transition-all`}>
+                                            <FontAwesomeIcon icon={faRocket} className="opacity-60 w-4" />
+                                            Dev Studio
+                                        </Link>
+                                    )}
+
+                                    {user.role === 'ADMIN' && (
+                                        <Link to="/manage-users" onClick={() => setIsDropdownOpen(false)} className={`flex items-center gap-3 px-4 py-2.5 text-xs font-bold rounded-xl hover:bg-white/5 ${theme.colors.text} transition-all`}>
+                                            Manage Users
+                                        </Link>
+                                    )}
+
+                                    {pendingRequests.length > 0 && (
+                                        <div className={`px-4 py-2 mt-2 bg-blue-500/5 rounded-2xl border border-blue-500/10`}>
+                                            <p className={`text-[9px] font-black text-blue-400 uppercase tracking-widest mb-2`}>Friend Requests</p>
+                                            <div className="space-y-2">
+                                                {pendingRequests.map(req => (
+                                                    <div key={req.id} className="flex items-center justify-between gap-2">
+                                                        <span className={`text-[10px] font-bold ${theme.colors.text} truncate`}>{req.user.name}</span>
+                                                        <button 
+                                                            onClick={() => handleAcceptFriend(req.id)}
+                                                            className={`bg-blue-600 hover:bg-blue-500 text-white text-[9px] px-2 py-1 rounded-lg font-black transition-all`}
+                                                        >
+                                                            Accept
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
+                                    )}
+                                </div>
 
-                                <Link to="/settings" onClick={() => setIsDropdownOpen(false)} className="block px-4 py-2 text-sm text-gray-300 hover:bg-steam-hover hover:text-white transition">
-                                    Settings & Profile
-                                </Link>
+                                <div className={`mx-4 my-2 border-t ${theme.colors.border}`}></div>
 
-                                {user.role === 'PUBLISHER' && (
-                                    <Link to="/dev-dashboard" onClick={() => setIsDropdownOpen(false)} className="block px-4 py-2 text-sm text-blue-400 hover:bg-steam-hover hover:text-blue-300 transition font-bold">
-                                        Dev Studio
-                                    </Link>
-                                )}
+                                <div className="px-2 space-y-1">
+                                    <button 
+                                        onClick={handleSwitchAccount}
+                                        className={`flex w-full items-center gap-3 px-4 py-2.5 text-xs font-bold rounded-xl hover:bg-white/5 ${theme.colors.text} transition-all`}
+                                    >
+                                        <FontAwesomeIcon icon={faExchangeAlt} className="opacity-40 w-4" />
+                                        Switch Account
+                                    </button>
 
-                                {user.role === 'ADMIN' && (
-                                    <Link to="/manage-users" onClick={() => setIsDropdownOpen(false)} className="block px-4 py-2 text-sm text-blue-400 hover:bg-steam-hover hover:text-blue-300 transition">
-                                        Manage Users
-                                    </Link>
-                                )}
-                                {(user.role === 'ADMIN' || user.role === 'PUBLISHER') && (
-                                    <>
-                                        <div className="border-t border-gray-700 my-1"></div>
-                                        <Link to="/admin-dashboard" onClick={() => setIsDropdownOpen(false)} className="block px-4 py-2 text-sm text-blue-400 hover:bg-steam-hover hover:text-blue-300 transition">
-                                            Dashboard
-                                        </Link>
-                                        <Link to="/manage-games" onClick={() => setIsDropdownOpen(false)} className="block px-4 py-2 text-sm text-blue-400 hover:bg-steam-hover hover:text-blue-300 transition">
-                                            Manage Games
-                                        </Link>
-                                    </>
-                                )}
+                                    <button 
+                                        onClick={handleDeleteAccount}
+                                        className={`flex w-full items-center gap-3 px-4 py-2.5 text-xs font-bold rounded-xl hover:bg-red-500/5 text-red-500 transition-all`}
+                                    >
+                                        Delete Account
+                                    </button>
 
-                                <div className="border-t border-gray-700 my-1"></div>
-                                
-                                <button 
-                                    onClick={handleSwitchAccount}
-                                    className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-steam-hover hover:text-white transition"
-                                >
-                                    <FontAwesomeIcon icon={faExchangeAlt} className="mr-2" />
-                                    Switch Account
-                                </button>
-
-                                <button 
-                                    onClick={handleDeleteAccount}
-                                    className="block w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-steam-hover hover:text-red-400 transition"
-                                >
-                                    <FontAwesomeIcon icon={faTrashAlt} className="mr-2" />
-                                    Delete Account
-                                </button>
-
-                                <button 
-                                    onClick={() => { logout(); setIsDropdownOpen(false); }}
-                                    className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-steam-hover hover:text-white transition"
-                                >
-                                    Sign Out
-                                </button>
-                            </div>
-                        )}
+                                    <button 
+                                        onClick={() => { logout(); setIsDropdownOpen(false); }}
+                                        className={`flex w-full items-center gap-3 px-4 py-2.5 text-xs font-bold rounded-xl hover:bg-white/5 ${theme.colors.text} transition-all`}
+                                    >
+                                        Sign Out
+                                    </button>
+                                </div>
+                        </motion.div>
+                    )}
                     </div>
                 </>
             ) : (
                 <div className="flex items-center gap-4">
-                    <Link to="/login" className="text-gray-300 hover:text-white transition font-medium px-3 py-1">Log In</Link>
-                    <Link to="/register" className="bg-steam-accent hover:bg-blue-500 text-white px-5 py-2 rounded transition font-bold shadow-lg text-sm flex items-center justify-center">Join Free</Link>
+                    <Link to="/login" className={`opacity-80 hover:opacity-100 ${theme.colors.text} transition font-medium px-3 py-1`}>Log In</Link>
+                    <Link to="/register" className={`bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded transition font-bold shadow-lg text-sm flex items-center justify-center`}>Join Free</Link>
                 </div>
             )}
         </div>

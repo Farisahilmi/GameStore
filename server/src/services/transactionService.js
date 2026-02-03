@@ -1,8 +1,14 @@
 const prisma = require('../utils/prisma');
 
-const createTransaction = async (userId, gameIds, recipientId = null) => {
+const createTransaction = async (userId, gameIds, recipientId = null, paymentMethod = 'CREDIT_CARD', voucherCode = null) => {
   if (!gameIds || gameIds.length === 0) {
     const error = new Error('No games selected');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (recipientId && parseInt(recipientId) === userId) {
+    const error = new Error('You cannot send a gift to yourself');
     error.statusCode = 400;
     throw error;
   }
@@ -44,20 +50,113 @@ const createTransaction = async (userId, gameIds, recipientId = null) => {
       isActive: true,
       startDate: { lte: now },
       endDate: { gte: now }
+    },
+    orderBy: {
+      discountPercent: 'desc' // Prioritize highest discount if multiple active
     }
   });
 
   const saleDiscount = activeSale ? activeSale.discountPercent : 0;
   
-  const total = games.reduce((sum, game) => {
+  let subtotal = games.reduce((sum, game) => {
     const publisherDiscount = game.discount || 0;
+    // Calculate total discount, capped at 100%
     const totalDiscount = Math.min(100, publisherDiscount + saleDiscount);
-    const finalPrice = parseFloat(game.price) * (1 - totalDiscount / 100);
-    return sum + finalPrice;
+    
+    // Convert Decimal to number for calculation
+    const basePrice = Number(game.price.toString());
+    const finalPrice = basePrice * (1 - totalDiscount / 100);
+    
+    // Ensure 2 decimal places precision
+    return sum + Number(finalPrice.toFixed(2));
   }, 0);
+
+  let voucherData = null;
+  if (voucherCode) {
+    const vCode = voucherCode.toUpperCase();
+    voucherData = await prisma.voucher.findUnique({ where: { code: vCode } });
+    if (!voucherData || !voucherData.isActive || now > new Date(voucherData.expiryDate) || voucherData.usedCount >= voucherData.maxUses) {
+        const error = new Error('Invalid or expired voucher');
+        error.statusCode = 400;
+        throw error;
+    }
+    
+    // Preliminary check (will be re-verified inside transaction)
+    const usage = await prisma.voucherUsage.findUnique({
+        where: {
+            voucherId_userId: {
+                voucherId: voucherData.id,
+                userId
+            }
+        }
+    });
+
+    if (usage) {
+        const error = new Error('You have already used this voucher');
+        error.statusCode = 400;
+        throw error;
+    }
+    
+    subtotal = subtotal * (1 - voucherData.discountPercent / 100);
+  }
+
+  const total = Math.max(0, Number(subtotal.toFixed(2)));
 
   // 4. Create Transaction and Library entries in a transaction
   const result = await prisma.$transaction(async (prisma) => {
+    // Re-verify Voucher inside transaction
+    if (voucherData) {
+        const v = await prisma.voucher.findUnique({ 
+            where: { id: voucherData.id }
+        });
+
+        if (v.usedCount >= v.maxUses) {
+            const error = new Error('Voucher usage limit reached');
+            error.statusCode = 400;
+            throw error;
+        }
+
+        const usage = await prisma.voucherUsage.findUnique({
+            where: {
+                voucherId_userId: {
+                    voucherId: v.id,
+                    userId
+                }
+            }
+        });
+
+        if (usage) {
+            const error = new Error('You have already used this voucher');
+            error.statusCode = 400;
+            throw error;
+        }
+
+        await prisma.voucher.update({
+            where: { id: v.id },
+            data: { usedCount: { increment: 1 } }
+        });
+        await prisma.voucherUsage.create({
+            data: {
+                voucherId: v.id,
+                userId
+            }
+        });
+    }
+
+    // Handle Wallet Payment
+    if (paymentMethod === 'WALLET') {
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (Number(user.walletBalance) < total) {
+            const error = new Error('Insufficient wallet balance');
+            error.statusCode = 400;
+            throw error;
+        }
+        await prisma.user.update({
+            where: { id: userId },
+            data: { walletBalance: { decrement: total } }
+        });
+    }
+
     // Create Transaction Record
     const transaction = await prisma.transaction.create({
       data: {

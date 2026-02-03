@@ -9,7 +9,8 @@ const gameSchema = Joi.object({
   discount: Joi.number().min(0).max(100).optional(),
   imageUrl: Joi.string().uri().optional(),
   releaseDate: Joi.date().optional(),
-  categoryNames: Joi.array().items(Joi.string()).optional()
+  categoryNames: Joi.array().items(Joi.string()).optional(),
+  screenshots: Joi.array().items(Joi.string().uri()).optional()
 });
 
 const updateGameSchema = Joi.object({
@@ -19,7 +20,8 @@ const updateGameSchema = Joi.object({
   discount: Joi.number().min(0).max(100).optional(),
   imageUrl: Joi.string().uri().optional(),
   releaseDate: Joi.date().optional(),
-  categoryNames: Joi.array().items(Joi.string()).optional()
+  categoryNames: Joi.array().items(Joi.string()).optional(),
+  screenshots: Joi.array().items(Joi.string().uri()).optional()
 });
 
 const getAllGames = async (req, res, next) => {

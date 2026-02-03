@@ -5,7 +5,9 @@ const Joi = require('joi');
 
 const transactionSchema = Joi.object({
   gameIds: Joi.array().items(Joi.number()).required(),
-  recipientId: Joi.number().optional().allow(null)
+  recipientId: Joi.number().optional().allow(null),
+  paymentMethod: Joi.string().valid('CREDIT_CARD', 'WALLET').default('CREDIT_CARD'),
+  voucherCode: Joi.string().optional().allow(null)
 });
 
 const createTransaction = async (req, res, next) => {
@@ -19,7 +21,9 @@ const createTransaction = async (req, res, next) => {
     const transaction = await transactionService.createTransaction(
       req.user.id,
       value.gameIds,
-      value.recipientId
+      value.recipientId,
+      value.paymentMethod,
+      value.voucherCode
     );
     
     // Send Notification

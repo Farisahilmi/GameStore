@@ -2,9 +2,13 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlay, faTrophy, faRocket, faDownload, faTrash, faTimesCircle, faCog } from '@fortawesome/free-solid-svg-icons';
+import { faPlay, faTrophy, faRocket, faDownload, faCog } from '@fortawesome/free-solid-svg-icons';
+import { useTheme } from '../context/ThemeContext';
+
+import Skeleton from './Skeleton';
 
 const Library = () => {
+  const { theme } = useTheme();
   const [games, setGames] = useState([]);
   const [filteredGames, setFilteredGames] = useState([]);
   const [selectedGame, setSelectedGame] = useState(null);
@@ -115,29 +119,52 @@ const Library = () => {
   };
 
   if (loading) return (
-      <div className="flex justify-center items-center h-screen bg-steam-dark text-white">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-steam-accent"></div>
+      <div className={`flex h-[calc(100vh-80px)] ${theme.colors.bg} overflow-hidden`}>
+          {/* Sidebar Skeleton */}
+          <div className={`w-64 ${theme.colors.card} border-r ${theme.colors.border} flex flex-col p-4 space-y-4`}>
+              <Skeleton className="h-8 w-full mb-4" />
+              {[...Array(10)].map((_, i) => (
+                  <Skeleton key={i} className="h-6 w-full" />
+              ))}
+          </div>
+          {/* Content Skeleton */}
+          <div className="flex-1 p-8">
+              <Skeleton className="h-64 w-full rounded-xl mb-8" />
+              <div className="flex justify-between items-center mb-10">
+                  <Skeleton className="h-12 w-48" />
+                  <div className="flex gap-4">
+                      <Skeleton className="h-10 w-24" />
+                      <Skeleton className="h-10 w-24" />
+                      <Skeleton className="h-10 w-24" />
+                  </div>
+              </div>
+              <Skeleton className="h-40 w-full rounded-lg mb-8" />
+              <div className="grid grid-cols-2 gap-8">
+                  <Skeleton className="h-32 w-full rounded-lg" />
+                  <Skeleton className="h-32 w-full rounded-lg" />
+              </div>
+          </div>
       </div>
   );
 
   if (games.length === 0) return (
-      <div className="container mx-auto px-4 py-20 text-center text-gray-400">
-          <h2 className="text-2xl font-bold mb-4">Your Library is Empty</h2>
-          <p>Go to the store and find your next adventure!</p>
+      <div className={`container mx-auto px-4 py-20 text-center opacity-60`}>
+          <h2 className={`text-2xl font-bold mb-4 ${theme.colors.text}`}>Your Library is Empty</h2>
+          <p className={theme.colors.text}>Go to the store and find your next adventure!</p>
       </div>
   );
 
   return (
-    <div className="flex h-[calc(100vh-80px)] bg-steam-dark overflow-hidden">
+    <div className={`flex h-[calc(100vh-80px)] ${theme.colors.bg} overflow-hidden`}>
       {/* Sidebar List */}
-      <div className="w-64 bg-gray-900 border-r border-gray-800 flex flex-col">
-          <div className="p-4 border-b border-gray-800 bg-gray-900 sticky top-0">
+      <div className={`w-64 ${theme.colors.card} border-r ${theme.colors.border} flex flex-col`}>
+          <div className={`p-4 border-b ${theme.colors.border} ${theme.colors.card} sticky top-0`}>
               <input 
                 type="text" 
                 placeholder="Search Collection" 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-gray-800 text-gray-300 px-3 py-1.5 rounded text-sm focus:outline-none focus:ring-1 focus:ring-steam-accent"
+                className={`w-full bg-black/20 ${theme.colors.text} px-3 py-1.5 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 border ${theme.colors.border}`}
               />
           </div>
           <div className="overflow-y-auto flex-1">
@@ -145,7 +172,7 @@ const Library = () => {
                   <button
                     key={game.id}
                     onClick={() => setSelectedGame(game)}
-                    className={`w-full text-left px-4 py-2 text-sm truncate transition hover:bg-gray-800 ${selectedGame?.id === game.id ? 'bg-gray-800 text-white font-medium border-l-2 border-steam-accent' : 'text-gray-400'}`}
+                    className={`w-full text-left px-4 py-2 text-sm truncate transition hover:bg-black/10 ${selectedGame?.id === game.id ? `bg-black/20 ${theme.colors.text} font-medium border-l-2 ${theme.colors.accent.replace('text-', 'border-')}` : `opacity-70 ${theme.colors.text}`}`}
                   >
                       <span className="mr-2 opacity-50">
                           {game.isInstalled ? <FontAwesomeIcon icon={faRocket} className="text-blue-400" /> : <FontAwesomeIcon icon={faDownload} />}
@@ -154,28 +181,27 @@ const Library = () => {
                   </button>
               ))}
               {filteredGames.length === 0 && (
-                  <div className="p-4 text-xs text-gray-500 italic text-center">No matches found</div>
+                  <div className="p-4 text-xs opacity-50 italic text-center">No matches found</div>
               )}
           </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto bg-steam-dark relative">
+      <div className={`flex-1 overflow-y-auto ${theme.colors.bg} relative`}>
           {selectedGame && (
               <>
                 {/* Hero Banner Background */}
                 <div className="relative h-64 md:h-80 w-full">
                     <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('${selectedGame.imageUrl}')` }}></div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-steam-dark via-steam-dark/50 to-transparent"></div>
+                    <div className={`absolute inset-0 bg-gradient-to-t from-${theme.colors.bg.split('-')[1] || 'gray'}-900 via-transparent to-transparent`}></div>
                     <div className="absolute bottom-6 left-8 z-10">
-                        <div className="w-24 h-12 mb-4 bg-contain bg-no-repeat bg-left-bottom" style={{ backgroundImage: 'url(https://community.akamai.steamstatic.com/public/shared/images/header/globalheader_logo.png)' }}></div> 
-                        {/* Note: In real app, game logo would be better, using title text for now */}
+                        {/* <div className="w-24 h-12 mb-4 bg-contain bg-no-repeat bg-left-bottom" style={{ backgroundImage: 'url(https://community.akamai.steamstatic.com/public/shared/images/header/globalheader_logo.png)' }}></div>  */}
                         <h1 className="text-4xl font-bold text-white drop-shadow-lg mb-4">{selectedGame.title}</h1>
                     </div>
                 </div>
 
                 {/* Action Bar */}
-                <div className="bg-gray-800/50 backdrop-blur-sm px-8 py-4 border-b border-gray-700 flex items-center justify-between sticky top-0 z-20">
+                <div className={`${theme.colors.card}/50 backdrop-blur-sm px-8 py-4 border-b ${theme.colors.border} flex items-center justify-between sticky top-0 z-20`}>
                     <div className="flex items-center gap-4">
                         {selectedGame.isInstalled ? (
                             <button 
@@ -200,20 +226,20 @@ const Library = () => {
                         <div className="relative">
                             <button 
                                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                                className="bg-gray-700 hover:bg-gray-600 text-gray-300 p-3 rounded shadow transition"
+                                className={`bg-gray-700 hover:bg-gray-600 text-gray-300 p-3 rounded shadow transition`}
                             >
                                 <FontAwesomeIcon icon={faCog} size="lg" />
                             </button>
 
                             {isMenuOpen && (
-                                <div className="absolute left-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded shadow-xl z-50">
+                                <div className={`absolute left-0 mt-2 w-48 ${theme.colors.card} border ${theme.colors.border} rounded shadow-xl z-50`}>
                                     <button 
                                         onClick={() => {
                                             handleUninstall(selectedGame.id);
                                             setIsMenuOpen(false);
                                         }}
                                         disabled={!selectedGame.isInstalled}
-                                        className={`block w-full text-left px-4 py-2 text-sm transition ${!selectedGame.isInstalled ? 'text-gray-600 cursor-not-allowed' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
+                                        className={`block w-full text-left px-4 py-2 text-sm transition ${!selectedGame.isInstalled ? 'opacity-50 cursor-not-allowed' : `hover:bg-black/10 ${theme.colors.text}`}`}
                                     >
                                         Uninstall
                                     </button>
@@ -223,7 +249,7 @@ const Library = () => {
                                             setIsMenuOpen(false);
                                         }}
                                         disabled={selectedGame.isInstalled}
-                                        className={`block w-full text-left px-4 py-2 text-sm transition ${selectedGame.isInstalled ? 'text-gray-600 cursor-not-allowed' : 'text-red-400 hover:bg-gray-700 hover:text-red-300'}`}
+                                        className={`block w-full text-left px-4 py-2 text-sm transition ${selectedGame.isInstalled ? 'opacity-50 cursor-not-allowed' : 'text-red-400 hover:bg-black/10 hover:text-red-300'}`}
                                     >
                                         Remove from Library
                                     </button>
@@ -236,19 +262,19 @@ const Library = () => {
                         </div>
                     </div>
                     
-                    <div className="hidden lg:flex gap-8 text-sm text-gray-400">
+                    <div className={`hidden lg:flex gap-8 text-sm opacity-70 ${theme.colors.text}`}>
                         <div>
-                            <div className="uppercase text-xs font-bold text-gray-500">Last Played</div>
-                            <div className="text-white">Today</div>
+                            <div className="uppercase text-xs font-bold opacity-60">Last Played</div>
+                            <div className="">Today</div>
                         </div>
                         <div>
-                            <div className="uppercase text-xs font-bold text-gray-500">Play Time</div>
-                            <div className="text-white">12.5 hours</div>
+                            <div className="uppercase text-xs font-bold opacity-60">Play Time</div>
+                            <div className="">12.5 hours</div>
                         </div>
                         <div>
-                            <div className="uppercase text-xs font-bold text-gray-500">Achievements</div>
-                            <div className="text-white flex items-center gap-1">
-                                <span className="text-steam-accent"><FontAwesomeIcon icon={faTrophy} /> 8/24</span>
+                            <div className="uppercase text-xs font-bold opacity-60">Achievements</div>
+                            <div className="flex items-center gap-1">
+                                <span className={`${theme.colors.accent}`}><FontAwesomeIcon icon={faTrophy} /> 8/24</span>
                             </div>
                         </div>
                     </div>
@@ -256,24 +282,24 @@ const Library = () => {
 
                 {/* Game Details / Feed */}
                 <div className="p-8 max-w-4xl">
-                    <div className="bg-steam-light p-6 rounded-lg border border-gray-700 mb-8">
-                        <h3 className="text-xl font-bold text-white mb-4 border-b border-gray-600 pb-2">Activity</h3>
+                    <div className={`${theme.colors.card} p-6 rounded-lg border ${theme.colors.border} mb-8`}>
+                        <h3 className={`text-xl font-bold ${theme.colors.text} mb-4 border-b ${theme.colors.border} pb-2`}>Activity</h3>
                         <div className="flex gap-4">
-                            <div className="bg-gray-800 p-4 rounded flex-1">
-                                <div className="text-steam-accent font-bold text-sm mb-1">ACHIEVEMENT UNLOCKED</div>
-                                <div className="text-white font-medium">First Blood</div>
-                                <div className="text-xs text-gray-500 mt-2">Unlocked on {new Date().toLocaleDateString()}</div>
+                            <div className="bg-black/20 p-4 rounded flex-1">
+                                <div className={`${theme.colors.accent} font-bold text-sm mb-1`}>ACHIEVEMENT UNLOCKED</div>
+                                <div className={`${theme.colors.text} font-medium`}>First Blood</div>
+                                <div className="text-xs opacity-60 mt-2">Unlocked on {new Date().toLocaleDateString()}</div>
                             </div>
-                            <div className="bg-gray-800 p-4 rounded flex-1">
+                            <div className="bg-black/20 p-4 rounded flex-1">
                                 <div className="text-blue-400 font-bold text-sm mb-1">SCREENSHOT CAPTURED</div>
-                                <div className="h-20 bg-gray-700 rounded mt-2"></div>
+                                <div className="h-20 bg-black/30 rounded mt-2"></div>
                             </div>
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
-                            <h3 className="text-lg font-bold text-white mb-2">Friends Who Play</h3>
+                            <h3 className={`text-lg font-bold ${theme.colors.text} mb-2`}>Friends Who Play</h3>
                             <div className="flex gap-2">
                                 {[1,2,3,4].map(i => (
                                     <div key={i} className="w-10 h-10 rounded bg-gray-700 border border-gray-600"></div>
@@ -281,8 +307,8 @@ const Library = () => {
                             </div>
                         </div>
                         <div>
-                             <h3 className="text-lg font-bold text-white mb-2">DLC</h3>
-                             <div className="bg-gray-800 p-3 rounded text-gray-400 text-sm">
+                             <h3 className={`text-lg font-bold ${theme.colors.text} mb-2`}>DLC</h3>
+                             <div className="bg-black/20 p-3 rounded opacity-70 text-sm">
                                  No DLC available for this title.
                              </div>
                         </div>

@@ -17,6 +17,8 @@ const io = new Server(server, {
 
 // Store io in app to access it from controllers/services
 app.set('io', io);
+global.io = io; // Make io globally available for services
+
 
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);

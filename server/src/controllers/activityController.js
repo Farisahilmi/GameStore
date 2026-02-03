@@ -3,6 +3,11 @@ const prisma = require('../utils/prisma');
 const getActivities = async (req, res, next) => {
     try {
         const activities = await prisma.activity.findMany({
+            where: {
+                type: {
+                    in: ['REVIEW', 'GAME_PUBLISHED', 'SALE_START'] // Only safe/public types
+                }
+            },
             include: {
                 user: {
                     select: { id: true, name: true }
