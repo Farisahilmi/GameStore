@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useNavigate, Link, useSearchPar
 import axios from 'axios';
 import { Toaster, toast } from 'react-hot-toast';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faBolt, faCheckCircle, faBook, faGamepad, faRocket, faArrowRight } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faBolt, faCheckCircle, faBook, faGamepad, faRocket, faArrowRight, faShoppingCart } from '@fortawesome/free-solid-svg-icons';
 import { io } from 'socket.io-client';
 import { motion } from 'framer-motion';
 
@@ -44,6 +44,26 @@ const Home = ({ addToCart, user, directPurchase, library }) => {
   useEffect(() => {
     fetchCategories();
   }, []);
+
+  useEffect(() => {
+    let heartbeatInterval;
+    if (user) {
+        // Initial heartbeat
+        axios.post('/api/users/heartbeat', {}, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        }).catch(() => {});
+
+        // Set up interval for heartbeat every 60 seconds
+        heartbeatInterval = setInterval(() => {
+            axios.post('/api/users/heartbeat', {}, {
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            }).catch(() => {});
+        }, 60000);
+    }
+    return () => {
+        if (heartbeatInterval) clearInterval(heartbeatInterval);
+    };
+  }, [user]);
 
   useEffect(() => {
     if (user) {
@@ -381,6 +401,12 @@ const Login = ({ setUser }) => {
       const { token, user } = res.data.data;
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
+
+      // Save to switch account list
+      const savedAccounts = JSON.parse(localStorage.getItem('savedAccounts') || '[]');
+      const filtered = savedAccounts.filter(acc => acc.user.id !== user.id);
+      localStorage.setItem('savedAccounts', JSON.stringify([{ token, user }, ...filtered]));
+
       setUser(user);
       navigate('/');
     } catch (err) {
@@ -483,6 +509,8 @@ import Footer from './components/Footer';
 import BrowseGames from './components/BrowseGames';
 import Sales from './components/Sales';
 import DiscoveryQueue from './components/DiscoveryQueue';
+import CommunityHub from './components/CommunityHub';
+import PostDetails from './components/PostDetails';
 import ActivityFeed from './components/ActivityFeed';
 import UserProfile from './components/UserProfile';
 import { Support, FAQ, SystemStatus, Contact, Privacy, Terms, Cookies, Refunds } from './components/StaticPages';
@@ -578,10 +606,10 @@ const AppContent = ({ user, setUser, refreshUser }) => {
     setCart([]);
   };
 
-  const [buyNowGame, setBuyNowGame] = useState(null);
-  const [purchaseSuccessGame, setPurchaseSuccessGame] = useState(null);
+  const [buyNowGame, setBuyNowGame] = useState(null); // { game, recipientId, recipientName }
+  const [purchaseSuccessGame, setPurchaseSuccessGame] = useState(null); // { game, recipientName }
 
-  const directPurchase = async (game) => {
+  const directPurchase = async (game, recipientId = null, recipientName = null) => {
       const token = localStorage.getItem('token');
       if (!token) {
           toast.error('Please login to buy games');
@@ -593,7 +621,7 @@ const AppContent = ({ user, setUser, refreshUser }) => {
           return;
       }
 
-      setBuyNowGame(game);
+      setBuyNowGame({ game, recipientId, recipientName });
   };
 
   const confirmDirectPurchase = async () => {
@@ -602,12 +630,13 @@ const AppContent = ({ user, setUser, refreshUser }) => {
       const token = localStorage.getItem('token');
       try {
           await axios.post('/api/transactions', { 
-              gameIds: [buyNowGame.id] 
+              gameIds: [buyNowGame.game.id],
+              recipientId: buyNowGame.recipientId
           }, {
               headers: { Authorization: `Bearer ${token}` }
           });
           toast.success('Purchase successful!');
-          setPurchaseSuccessGame(buyNowGame);
+          setPurchaseSuccessGame({ game: buyNowGame.game, recipientName: buyNowGame.recipientName });
           setBuyNowGame(null);
           fetchLibrary(); // Refresh library after purchase
       } catch (err) {
@@ -635,14 +664,20 @@ const AppContent = ({ user, setUser, refreshUser }) => {
         {buyNowGame && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
                 <div className={`${theme.colors.card} border ${theme.colors.border} rounded-xl shadow-2xl max-w-md w-full p-6 animate-fadeIn`}>
-                    <h3 className="text-2xl font-bold mb-4">Confirm Purchase</h3>
+                    <h3 className="text-2xl font-bold mb-4">{buyNowGame.recipientId ? 'Send Gift' : 'Confirm Purchase'}</h3>
                     <div className="flex gap-4 mb-6">
-                        <img src={buyNowGame.imageUrl} alt={buyNowGame.title} className="w-24 h-32 object-cover rounded shadow-md" />
+                        <img src={buyNowGame.game.imageUrl} alt={buyNowGame.game.title} className="w-24 h-32 object-cover rounded shadow-md" />
                         <div>
-                            <h4 className={`text-lg font-bold ${theme.colors.accent} mb-1`}>{buyNowGame.title}</h4>
-                            <div className="text-sm opacity-70 mb-2">Standard Edition</div>
+                            <h4 className={`text-lg font-bold ${theme.colors.accent} mb-1`}>{buyNowGame.game.title}</h4>
+                            <div className="text-sm opacity-70 mb-2">
+                                {buyNowGame.recipientId ? (
+                                    <span>Gifting to: <span className="text-blue-400 font-bold">{buyNowGame.recipientName}</span></span>
+                                ) : (
+                                    'Standard Edition'
+                                )}
+                            </div>
                             <div className="text-2xl font-bold">
-                                ${Number(buyNowGame.finalPrice !== undefined ? buyNowGame.finalPrice : buyNowGame.price).toFixed(2)}
+                                ${Number(buyNowGame.game.finalPrice !== undefined ? buyNowGame.game.finalPrice : buyNowGame.game.price).toFixed(2)}
                             </div>
                         </div>
                     </div>
@@ -651,7 +686,7 @@ const AppContent = ({ user, setUser, refreshUser }) => {
                             onClick={confirmDirectPurchase}
                             className="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded transition shadow-lg flex items-center justify-center gap-2"
                         >
-                            <FontAwesomeIcon icon={faBolt} /> Buy Now
+                            <FontAwesomeIcon icon={faBolt} /> {buyNowGame.recipientId ? 'Send Gift' : 'Buy Now'}
                         </button>
                         <button 
                             onClick={() => setBuyNowGame(null)}
@@ -669,20 +704,26 @@ const AppContent = ({ user, setUser, refreshUser }) => {
                     <div className="text-green-500 text-6xl mb-6 scale-110">
                         <FontAwesomeIcon icon={faCheckCircle} />
                     </div>
-                    <h3 className="text-3xl font-bold mb-2">Purchase Successful!</h3>
+                    <h3 className="text-3xl font-bold mb-2">{purchaseSuccessGame.recipientName ? 'Gift Sent!' : 'Purchase Successful!'}</h3>
                     <p className="opacity-70 mb-8">
-                        <span className={`${theme.colors.accent} font-bold`}>{purchaseSuccessGame.title}</span> has been added to your library.
+                        <span className={`${theme.colors.accent} font-bold`}>{purchaseSuccessGame.game.title}</span> 
+                        {purchaseSuccessGame.recipientName ? (
+                            <span> has been sent to <span className="text-blue-400 font-bold">{purchaseSuccessGame.recipientName}</span>.</span>
+                        ) : (
+                            ' has been added to your library.'
+                        )}
                     </p>
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <button 
                             onClick={() => {
                                 setPurchaseSuccessGame(null);
-                                window.location.href = '/library';
+                                window.location.href = purchaseSuccessGame.recipientName ? '/browse' : '/library';
                             }}
                             className="bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold shadow-lg transition flex items-center justify-center gap-2"
                         >
-                            <FontAwesomeIcon icon={faBook} /> Go to Library
+                            <FontAwesomeIcon icon={purchaseSuccessGame.recipientName ? faShoppingCart : faBook} /> 
+                            {purchaseSuccessGame.recipientName ? 'Continue Browsing' : 'Go to Library'}
                         </button>
                         <button 
                             onClick={() => setPurchaseSuccessGame(null)}
@@ -735,6 +776,8 @@ const AppContent = ({ user, setUser, refreshUser }) => {
           } />
           <Route path="/news" element={<News />} />
           <Route path="/news/:id" element={<NewsDetails />} />
+          <Route path="/community" element={<CommunityHub />} />
+          <Route path="/community/post/:id" element={<PostDetails />} />
           <Route path="/profile/:id" element={<UserProfile currentUser={user} addToCart={addToCart} />} />
           <Route path="/browse" element={<BrowseGames addToCart={addToCart} library={library} />} />
           <Route path="/sales" element={<Sales addToCart={addToCart} library={library} />} />

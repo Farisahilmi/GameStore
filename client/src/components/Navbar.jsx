@@ -12,12 +12,15 @@ const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications 
   const { theme, currentTheme } = useTheme();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [isSwitchModalOpen, setIsSwitchModalOpen] = useState(false);
+  const [savedAccounts, setSavedAccounts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [userSearchTerm, setUserSearchTerm] = useState('');
   const [userSearchResults, setUserSearchResults] = useState([]);
   const [pendingRequests, setPendingRequests] = useState([]);
   const [wishlistCount, setWishlistCount] = useState(0);
   const [scrolled, setScrolled] = useState(false);
+  const [friends, setFriends] = useState([]);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -62,6 +65,18 @@ const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications 
             }
         };
 
+        const fetchFriends = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const res = await axios.get('/api/friends', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setFriends(res.data.data);
+            } catch (err) {
+                console.error('Failed to fetch friends');
+            }
+        };
+
         const fetchPendingFriends = async () => {
             try {
                 const token = localStorage.getItem('token');
@@ -76,6 +91,7 @@ const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications 
 
         fetchWishlist();
         fetchPendingFriends();
+        fetchFriends();
 
         // Listen for updates
         const handleWishlistUpdate = () => {
@@ -112,10 +128,26 @@ const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications 
     }
   };
 
+  useEffect(() => {
+    const accounts = JSON.parse(localStorage.getItem('savedAccounts') || '[]');
+    setSavedAccounts(accounts);
+  }, [isSwitchModalOpen]);
+
   const handleSwitchAccount = () => {
-      logout();
-      navigate('/login');
-      toast.success('Logged out. Please sign in with another account.');
+      setIsSwitchModalOpen(true);
+      setIsDropdownOpen(false);
+  };
+
+  const performSwitch = (account) => {
+      localStorage.setItem('token', account.token);
+      localStorage.setItem('user', JSON.stringify(account.user));
+      window.location.reload(); // Reload to refresh all contexts
+  };
+
+  const removeSavedAccount = (userId) => {
+      const filtered = savedAccounts.filter(acc => acc.user.id !== userId);
+      localStorage.setItem('savedAccounts', JSON.stringify(filtered));
+      setSavedAccounts(filtered);
   };
 
   const handleDeleteAccount = async () => {
@@ -189,6 +221,10 @@ const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications 
                     News
                     <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-current transition-all duration-300 group-hover:w-full opacity-50"></span>
                 </Link>
+                <Link to="/community" className={`text-[10px] font-black opacity-60 hover:opacity-100 ${theme.colors.text} transition-all uppercase tracking-[0.25em] relative group`}>
+                    Community
+                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-current transition-all duration-300 group-hover:w-full opacity-50"></span>
+                </Link>
             </div>
         </div>
 
@@ -225,10 +261,21 @@ const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications 
                                     onClick={() => { setUserSearchTerm(''); setUserSearchResults([]); }}
                                     className={`flex items-center gap-3 p-3 hover:bg-white/5 transition border-b ${theme.colors.border} last:border-0`}
                                 >
-                                    <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${getProfileGradient(u.role)} flex items-center justify-center text-[10px] font-black text-white shadow-lg`}>
-                                        {u.name.charAt(0).toUpperCase()}
+                                    <div className="relative">
+                                        <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${getProfileGradient(u.role)} flex items-center justify-center text-[10px] font-black text-white shadow-lg`}>
+                                            {u.name.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 ${theme.colors.card.replace('bg-', 'border-')} ${
+                                            u.status === 'ONLINE' ? 'bg-green-500' : 
+                                            u.status === 'PLAYING' ? 'bg-blue-400' : 
+                                            u.status === 'AWAY' ? 'bg-yellow-500' : 
+                                            'bg-gray-500'
+                                        }`}></div>
                                     </div>
-                                    <span className={`text-xs font-bold ${theme.colors.text} truncate`}>{u.name}</span>
+                                    <div className="flex flex-col min-w-0">
+                                        <span className={`text-xs font-bold ${theme.colors.text} truncate`}>{u.name}</span>
+                                        <span className="text-[8px] opacity-40 font-black uppercase tracking-tighter">{u.status || 'OFFLINE'}</span>
+                                    </div>
                                 </Link>
                             ))}
                         </div>
@@ -383,6 +430,40 @@ const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications 
                                         </Link>
                                     )}
 
+                                    {friends.length > 0 && (
+                                        <div className="px-4 py-2 mt-2 border-t border-white/5 pt-4">
+                                            <p className={`text-[9px] font-black opacity-40 uppercase tracking-widest mb-3`}>Friends Status</p>
+                                            <div className="space-y-3 max-h-40 overflow-y-auto pr-2 scrollbar-hide">
+                                                {friends.map(f => (
+                                                    <Link 
+                                                        key={f.id} 
+                                                        to={`/profile/${f.id}`}
+                                                        onClick={() => setIsDropdownOpen(false)}
+                                                        className="flex items-center gap-3 group"
+                                                    >
+                                                        <div className="relative">
+                                                            <div className={`w-7 h-7 rounded-lg bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center text-[10px] font-black text-white group-hover:scale-110 transition-transform`}>
+                                                                {f.name.charAt(0).toUpperCase()}
+                                                            </div>
+                                                            <div className={`absolute -bottom-1 -right-1 w-2.5 h-2.5 rounded-full border-2 ${theme.colors.card.replace('bg-', 'border-')} ${
+                                                                f.status === 'ONLINE' ? 'bg-green-500' : 
+                                                                f.status === 'PLAYING' ? 'bg-blue-400' : 
+                                                                f.status === 'AWAY' ? 'bg-yellow-500' : 
+                                                                'bg-gray-500'
+                                                            }`}></div>
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className={`text-[11px] font-bold ${theme.colors.text} truncate`}>{f.name}</div>
+                                                            <div className="text-[8px] opacity-40 font-black uppercase tracking-tighter truncate">
+                                                                {f.statusMessage || f.status || 'Offline'}
+                                                            </div>
+                                                        </div>
+                                                    </Link>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {pendingRequests.length > 0 && (
                                         <div className={`px-4 py-2 mt-2 bg-blue-500/5 rounded-2xl border border-blue-500/10`}>
                                             <p className={`text-[9px] font-black text-blue-400 uppercase tracking-widest mb-2`}>Friend Requests</p>
@@ -441,6 +522,77 @@ const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications 
         </div>
       </div>
       
+      {/* Switch Account Modal */}
+      {isSwitchModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+              <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsSwitchModalOpen(false)}></div>
+              <div className={`${theme.colors.card} w-full max-w-md rounded-[2.5rem] border ${theme.colors.border} ${theme.colors.shadow} relative z-10 overflow-hidden`}>
+                  <div className="p-8">
+                      <h3 className={`text-2xl font-black ${theme.colors.text} mb-6 tracking-tighter italic`}>Switch <span className="text-blue-500">Account</span></h3>
+                      
+                      <div className="space-y-3 max-h-96 overflow-y-auto pr-2 scrollbar-hide">
+                          {savedAccounts.length === 0 ? (
+                              <div className="text-center py-10 opacity-40">
+                                  <p className="text-sm font-bold">No other saved accounts.</p>
+                                  <p className="text-[10px] uppercase tracking-widest mt-2">Login to save accounts here.</p>
+                              </div>
+                          ) : (
+                              savedAccounts.map(acc => (
+                                  <div 
+                                      key={acc.user.id} 
+                                      className={`flex items-center gap-4 p-4 rounded-2xl border transition-all ${
+                                          user.id === acc.user.id 
+                                          ? 'border-blue-500 bg-blue-500/5' 
+                                          : `${theme.colors.border} hover:bg-white/5`
+                                      }`}
+                                  >
+                                      <div 
+                                          className="flex-1 flex items-center gap-4 cursor-pointer"
+                                          onClick={() => user.id !== acc.user.id && performSwitch(acc)}
+                                      >
+                                          <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${getProfileGradient(acc.user.role)} flex items-center justify-center text-white font-black`}>
+                                              {acc.user.name.charAt(0).toUpperCase()}
+                                          </div>
+                                          <div className="flex flex-col min-w-0">
+                                              <span className={`text-sm font-black ${theme.colors.text} truncate`}>{acc.user.name}</span>
+                                              <span className="text-[10px] font-black opacity-40 uppercase tracking-widest">{acc.user.role}</span>
+                                          </div>
+                                          {user.id === acc.user.id && (
+                                              <span className="ml-auto text-[10px] font-black text-blue-500 uppercase tracking-widest">Active</span>
+                                          )}
+                                      </div>
+                                      {user.id !== acc.user.id && (
+                                          <button 
+                                              onClick={() => removeSavedAccount(acc.user.id)}
+                                              className="opacity-20 hover:opacity-100 hover:text-red-500 transition-all p-2"
+                                          >
+                                              <FontAwesomeIcon icon={faCog} className="text-xs" />
+                                          </button>
+                                      )}
+                                  </div>
+                              ))
+                          )}
+                      </div>
+
+                      <div className="mt-8 flex gap-3">
+                          <button 
+                              onClick={() => { setIsSwitchModalOpen(false); navigate('/login'); }}
+                              className="flex-1 bg-white/5 hover:bg-white/10 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all"
+                          >
+                              Add New Account
+                          </button>
+                          <button 
+                              onClick={() => setIsSwitchModalOpen(false)}
+                              className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all"
+                          >
+                              Close
+                          </button>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      )}
+
       {/* Overlay to close dropdown when clicking outside */}
       {(isDropdownOpen || isNotifOpen) && (
           <div className="fixed inset-0 z-40" onClick={() => { setIsDropdownOpen(false); setIsNotifOpen(false); }}></div>

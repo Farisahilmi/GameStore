@@ -3,9 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faStar, faCartPlus, faBolt, faHeart, faEdit, faTrash, faTimes, faThumbsUp, faThumbsDown, faExpand, faPlayCircle, faCertificate } from '@fortawesome/free-solid-svg-icons';
+import { faStar, faCartPlus, faBolt, faHeart, faEdit, faTrash, faTimes, faThumbsUp, faThumbsDown, faExpand, faPlayCircle, faCertificate, faGift } from '@fortawesome/free-solid-svg-icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
+import FriendSelectionModal from './FriendSelectionModal';
 
 const GameDetails = ({ addToCart, directPurchase, library }) => {
   const { theme } = useTheme();
@@ -22,6 +23,7 @@ const GameDetails = ({ addToCart, directPurchase, library }) => {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isBuyingNow, setIsBuyingNow] = useState(false);
   const [isAddingWishlist, setIsAddingWishlist] = useState(false);
+  const [isGiftModalOpen, setIsGiftModalOpen] = useState(false);
   const [userRating, setUserRating] = useState(5);
   const [userComment, setUserComment] = useState('');
   const [loading, setLoading] = useState(true);
@@ -173,6 +175,21 @@ const GameDetails = ({ addToCart, directPurchase, library }) => {
 
   const handleImageError = (e) => {
     e.target.src = PLACEHOLDER_IMG;
+  };
+
+  const handlePlayGame = async () => {
+    try {
+        const token = localStorage.getItem('token');
+        await axios.put('/api/users/status', { 
+            status: 'PLAYING', 
+            statusMessage: `Playing ${game.title}` 
+        }, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        toast.success(`Starting ${game.title}...`);
+    } catch (err) {
+        toast.error('Failed to update status');
+    }
   };
 
   if (loading) return (
@@ -341,9 +358,12 @@ const GameDetails = ({ addToCart, directPurchase, library }) => {
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 mb-3">
                   {library && library.includes(game.id) ? (
-                    <div className={`w-full bg-gray-700/50 opacity-70 font-bold py-4 rounded text-center border ${theme.colors.border} cursor-default`}>
-                        In Library
-                    </div>
+                    <button 
+                        onClick={handlePlayGame}
+                        className={`w-full bg-green-600 hover:bg-green-500 text-white font-black py-4 rounded-xl transition-all shadow-lg shadow-green-500/25 flex items-center justify-center gap-3 active:scale-95`}
+                    >
+                        <FontAwesomeIcon icon={faPlayCircle} className="text-xl" /> PLAY NOW
+                    </button>
                   ) : (
                     <>
                       <button 
@@ -375,6 +395,12 @@ const GameDetails = ({ addToCart, directPurchase, library }) => {
                         ) : (
                             <><FontAwesomeIcon icon={faBolt} /> Buy Now</>
                         )}
+                      </button>
+                      <button 
+                        onClick={() => setIsGiftModalOpen(true)}
+                        className="flex-1 bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 px-4 rounded shadow-lg transition transform hover:scale-105 flex items-center justify-center gap-2 text-sm sm:text-base"
+                      >
+                        <FontAwesomeIcon icon={faGift} /> Buy as Gift
                       </button>
                     </>
                   )}
@@ -673,6 +699,17 @@ const GameDetails = ({ addToCart, directPurchase, library }) => {
                 )}
             </motion.div>
         </AnimatePresence>
+
+        {/* Gift Modal */}
+         <FriendSelectionModal 
+             isOpen={isGiftModalOpen} 
+             onClose={() => setIsGiftModalOpen(false)} 
+             gameTitle={game.title}
+             onSelect={(friend) => {
+                 setIsGiftModalOpen(false);
+                 directPurchase(game, friend.id, friend.name);
+             }}
+         />
       </div>
     </div>
   );

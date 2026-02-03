@@ -190,8 +190,15 @@ const createTransaction = async (userId, gameIds, recipientId = null, paymentMet
 
 const getUserTransactions = async (userId) => {
   const transactions = await prisma.transaction.findMany({
-    where: { userId },
+    where: { 
+      OR: [
+        { userId },
+        { recipientId: userId }
+      ]
+    },
     include: {
+      user: { select: { name: true } },
+      recipient: { select: { name: true } },
       games: {
         select: {
           id: true,

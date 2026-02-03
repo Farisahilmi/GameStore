@@ -6,6 +6,8 @@ const { authenticate, authorize } = require('../middlewares/authMiddleware');
 router.get('/profile', authenticate, userController.getProfile);
 router.put('/profile', authenticate, userController.updateProfile);
 router.put('/theme', authenticate, userController.updateTheme);
+router.put('/status', authenticate, userController.updateStatus);
+router.post('/heartbeat', authenticate, userController.heartbeat);
 router.get('/:id/profile', authenticate, userController.getUserProfile);
 router.put('/upgrade-to-publisher', authenticate, userController.upgradeToPublisher);
 router.delete('/me', authenticate, userController.deleteAccount);

@@ -1,4 +1,5 @@
 const prisma = require('../utils/prisma');
+const userService = require('../services/userService');
 
 const upgradeToPublisher = async (req, res, next) => {
   try {
@@ -113,7 +114,23 @@ const getUserProfile = async (req, res, next) => {
 
         const user = await prisma.user.findUnique({
             where: { id: parseInt(id) },
-            select: { id: true, name: true, email: true, role: true, bio: true, createdAt: true }
+            select: { 
+                id: true, 
+                name: true, 
+                email: true, 
+                role: true, 
+                bio: true, 
+                createdAt: true,
+                status: true,
+                statusMessage: true,
+                _count: {
+                    select: {
+                        forumPosts: true,
+                        forumComments: true,
+                        reviews: true
+                    }
+                }
+            }
         });
 
         if (!user) {
@@ -148,12 +165,31 @@ const getUserProfile = async (req, res, next) => {
             }
         }
 
+        // Fetch user's friends list
+        const userFriends = await prisma.friend.findMany({
+            where: {
+                OR: [
+                    { userId: parseInt(id), status: 'ACCEPTED' },
+                    { friendId: parseInt(id), status: 'ACCEPTED' }
+                ]
+            },
+            include: {
+                user: { select: { id: true, name: true, role: true, status: true } },
+                friend: { select: { id: true, name: true, role: true, status: true } }
+            }
+        });
+
+        const friends = userFriends.map(f => {
+            return f.userId === parseInt(id) ? f.friend : f.user;
+        });
+
         res.status(200).json({
             success: true,
             data: {
                 user,
                 library,
-                friendStatus
+                friendStatus,
+                friends
             }
         });
     } catch (error) {
@@ -203,6 +239,25 @@ const updateProfile = async (req, res, next) => {
     }
 };
 
+const updateStatus = async (req, res, next) => {
+    try {
+        const { status, statusMessage } = req.body;
+        await userService.updateStatus(req.user.id, status, statusMessage);
+        res.status(200).json({ success: true });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const heartbeat = async (req, res, next) => {
+    try {
+        await userService.getHeartbeat(req.user.id);
+        res.status(200).json({ success: true });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
   upgradeToPublisher,
   getProfile,
@@ -211,5 +266,7 @@ module.exports = {
   deleteAccount,
   getUserProfile,
   updateTheme,
-  updateProfile
+  updateProfile,
+  updateStatus,
+  heartbeat
 };

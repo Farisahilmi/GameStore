@@ -28,7 +28,13 @@ const register = async (data) => {
 
   const token = generateToken({ id: user.id, role: user.role });
 
-  return { user: { id: user.id, email: user.email, name: user.name, role: user.role }, token };
+  // Update status to ONLINE on login
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { status: 'ONLINE', lastActive: new Date() }
+  });
+
+  return { user: { id: user.id, email: user.email, name: user.name, role: user.role, walletBalance: user.walletBalance, status: 'ONLINE' }, token };
 };
 
 const login = async (data) => {

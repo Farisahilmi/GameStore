@@ -20,9 +20,11 @@ const ManageGames = ({ user }) => {
     price: '',
     discount: '',
     imageUrl: '',
-    categoryNames: '' // comma separated for input
+    categoryNames: '',
+    screenshots: '' // comma separated for input
   });
   const [imageFile, setImageFile] = useState(null);
+  const [screenshotFiles, setScreenshotFiles] = useState([]);
   const [uploadMode, setUploadMode] = useState('url'); // 'url' or 'file'
   const [isUploading, setIsUploading] = useState(false);
 
@@ -72,33 +74,38 @@ const ManageGames = ({ user }) => {
     };
 
     let finalImageUrl = formData.imageUrl;
+    let finalScreenshots = formData.screenshots.split(',').map(s => s.trim()).filter(s => s);
 
     try {
-      if (uploadMode === 'file' && imageFile) {
-        const uploadFormData = new FormData();
-        uploadFormData.append('image', imageFile);
-
-        setIsUploading(true);
-        try {
+      if (uploadMode === 'file') {
+        if (imageFile) {
+          const uploadFormData = new FormData();
+          uploadFormData.append('image', imageFile);
+          setIsUploading(true);
           const uploadRes = await axios.post('/api/upload', uploadFormData, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-              Authorization: `Bearer ${token}`
-            }
+            headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` }
           });
           finalImageUrl = uploadRes.data.data.url;
-        } catch (uploadErr) {
-          console.error(uploadErr);
-          toast.error('Image upload failed, falling back to existing URL');
-          setIsUploading(false);
-          return;
         }
-        setIsUploading(false);
+
+        if (screenshotFiles.length > 0) {
+          setIsUploading(true);
+          const screenshotUrls = await Promise.all(screenshotFiles.map(async (file) => {
+            const fd = new FormData();
+            fd.append('image', file);
+            const res = await axios.post('/api/upload', fd, {
+              headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` }
+            });
+            return res.data.data.url;
+          }));
+          finalScreenshots = [...finalScreenshots, ...screenshotUrls];
+        }
       }
 
       const payload = {
         ...formData,
         imageUrl: finalImageUrl,
+        screenshots: finalScreenshots,
         price: parseFloat(formData.price),
         discount: parseInt(formData.discount) || 0,
         categoryNames: formData.categoryNames.split(',').map(s => s.trim()).filter(s => s)
@@ -127,7 +134,8 @@ const ManageGames = ({ user }) => {
       price: game.price,
       discount: game.discount || 0,
       imageUrl: game.imageUrl || '',
-      categoryNames: game.categories ? game.categories.map(c => c.name).join(', ') : ''
+      categoryNames: game.categories ? game.categories.map(c => c.name).join(', ') : '',
+      screenshots: game.screenshots ? game.screenshots.map(s => s.url).join(', ') : ''
     });
   };
 
@@ -150,13 +158,15 @@ const ManageGames = ({ user }) => {
     setIsEditing(false);
     setCurrentId(null);
     setImageFile(null);
+    setScreenshotFiles([]);
     setFormData({
       title: '',
       description: '',
       price: '',
       discount: '',
       imageUrl: '',
-      categoryNames: ''
+      categoryNames: '',
+      screenshots: ''
     });
   };
 
@@ -203,7 +213,7 @@ const ManageGames = ({ user }) => {
                 </div>
             </div>
             <div>
-              <label className="block opacity-50 text-sm mb-1">Game Image</label>
+              <label className="block opacity-50 text-sm mb-1">Game Image (Cover)</label>
               <div className="flex gap-4 mb-2">
                 <button 
                   type="button"
@@ -226,7 +236,7 @@ const ManageGames = ({ user }) => {
                   name="imageUrl" 
                   value={formData.imageUrl} 
                   onChange={handleChange} 
-                  placeholder="https://example.com/image.jpg"
+                  placeholder="https://example.com/cover.jpg"
                   className={`w-full ${theme.colors.bg} border ${theme.colors.border} rounded p-2 ${theme.colors.text} focus:border-blue-500 outline-none`}
                 />
               ) : (
@@ -238,6 +248,30 @@ const ManageGames = ({ user }) => {
                     className={`w-full ${theme.colors.text} text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500`}
                   />
                   {imageFile && <div className="text-green-500 text-xs mt-2 font-bold">Selected: {imageFile.name}</div>}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="block opacity-50 text-sm mb-1">Screenshots (comma separated URLs or upload)</label>
+              {uploadMode === 'url' ? (
+                <textarea 
+                  name="screenshots" 
+                  value={formData.screenshots} 
+                  onChange={handleChange} 
+                  placeholder="URL1, URL2, URL3"
+                  className={`w-full ${theme.colors.bg} border ${theme.colors.border} rounded p-2 ${theme.colors.text} focus:border-blue-500 outline-none h-20`}
+                />
+              ) : (
+                <div className={`border border-dashed ${theme.colors.border} rounded p-4 text-center hover:border-blue-500 transition`}>
+                  <input 
+                    type="file" 
+                    multiple
+                    accept="image/*"
+                    onChange={e => setScreenshotFiles(Array.from(e.target.files))}
+                    className={`w-full ${theme.colors.text} text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500`}
+                  />
+                  {screenshotFiles.length > 0 && <div className="text-green-500 text-xs mt-2 font-bold">{screenshotFiles.length} files selected</div>}
                 </div>
               )}
             </div>
@@ -281,6 +315,14 @@ const ManageGames = ({ user }) => {
                       <div>
                         <h4 className={`font-bold text-lg ${theme.colors.text}`}>{game.title}</h4>
                         <p className="text-sm opacity-60">${game.price} - {game.categories?.map(c => c.name).join(', ')}</p>
+                        {game.screenshots && game.screenshots.length > 0 && (
+                          <div className="flex gap-1 mt-1">
+                            {game.screenshots.slice(0, 3).map((s, idx) => (
+                              <img key={idx} src={s.url} alt="screenshot" className="w-8 h-8 object-cover rounded border border-white/10" />
+                            ))}
+                            {game.screenshots.length > 3 && <span className="text-[10px] opacity-50 flex items-center">+{game.screenshots.length - 3}</span>}
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="flex gap-2">

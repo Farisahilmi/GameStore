@@ -15,6 +15,9 @@ model User {
   bio            String?
   role           String              @default("USER")
   theme          String              @default("default")
+  status         String              @default("OFFLINE") // OFFLINE, ONLINE, AWAY, PLAYING
+  statusMessage  String?             // e.g., "Playing Cyberpunk 2077"
+  lastActive     DateTime            @default(now())
   walletBalance  Decimal             @default(0)
   createdAt      DateTime            @default(now())
   updatedAt      DateTime            @updatedAt
@@ -34,6 +37,33 @@ model User {
   transactions   Transaction[]
   wishlist       Wishlist[]
   voucherUsages  VoucherUsage[]
+  forumPosts     ForumPost[]
+  forumComments  ForumComment[]
+}
+
+model ForumPost {
+  id        Int            @id @default(autoincrement())
+  userId    Int
+  gameId    Int?           // Optional: link to a specific game community
+  title     String
+  content   String
+  type      String         @default("DISCUSSION") // DISCUSSION, GUIDE, NEWS
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  game      Game?          @relation(fields: [gameId], references: [id], onDelete: SetNull)
+  comments  ForumComment[]
+}
+
+model ForumComment {
+  id        Int       @id @default(autoincrement())
+  postId    Int
+  userId    Int
+  content   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  post      ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Game {
@@ -55,6 +85,7 @@ model Game {
   categories   Category[]    @relation("CategoryToGame")
   transactions Transaction[] @relation("GameToTransaction")
   screenshots  GameImage[]
+  forumPosts   ForumPost[]
 }
 
 model GameImage {
