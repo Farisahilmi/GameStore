@@ -55,7 +55,7 @@ const getPublisherStats = async (req, res, next) => {
       where: { publisherId },
       include: {
         _count: {
-          select: { transactions: true, reviews: true }
+          select: { transactions: true, reviews: true, wishlists: true }
         }
       }
     });
@@ -99,7 +99,8 @@ const getPublisherStats = async (req, res, next) => {
           price: g.price,
           discount: g.discount,
           salesCount: g._count.transactions,
-          reviewCount: g._count.reviews
+          reviewCount: g._count.reviews,
+          wishlistCount: g._count.wishlists
         }))
       }
     });

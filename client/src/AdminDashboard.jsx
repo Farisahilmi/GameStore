@@ -88,6 +88,11 @@ const AdminDashboard = ({ user }) => {
                           <div className="text-3xl font-bold text-white">{stats.totalUsers}</div>
                       </div>
                   )}
+                  <div className={`${theme.colors.card} p-6 rounded-lg border ${theme.colors.border} shadow-xl bg-gradient-to-br from-red-500/5 to-transparent`}>
+                      <h3 className="text-red-400 text-xs font-bold uppercase mb-1">Total Wishlists</h3>
+                      <div className="text-3xl font-bold text-red-500">{stats.totalWishlist}</div>
+                      <p className="text-[9px] opacity-40 mt-1 uppercase tracking-[0.1em] font-black">Potential Conversions</p>
+                  </div>
               </div>
           </div>
       )}
@@ -177,8 +182,8 @@ const AdminDashboard = ({ user }) => {
                             <tr className={`${theme.name === 'Clean Light' ? 'bg-gray-50' : 'bg-gray-900/50'} opacity-50 text-[10px] uppercase`}>
                                 <th className="px-6 py-3">Game Title</th>
                                 <th className="px-6 py-3">Price</th>
-                                <th className="px-6 py-3">Discount</th>
                                 <th className="px-6 py-3">Sales</th>
+                                <th className="px-6 py-3">Wishlists</th>
                                 <th className="px-6 py-3">Reviews</th>
                             </tr>
                         </thead>
@@ -187,14 +192,8 @@ const AdminDashboard = ({ user }) => {
                                 <tr key={g.id} className="hover:bg-black/5 transition text-sm">
                                     <td className={`px-6 py-4 font-bold ${theme.colors.text}`}>{g.title}</td>
                                     <td className="px-6 py-4 opacity-70">${Number(g.price).toFixed(2)}</td>
-                                    <td className="px-6 py-4">
-                                        {g.discount > 0 ? (
-                                            <span className="bg-red-900/50 text-red-400 px-2 py-0.5 rounded border border-red-500/20">-{g.discount}%</span>
-                                        ) : (
-                                            <span className="opacity-30">-</span>
-                                        )}
-                                    </td>
                                     <td className="px-6 py-4 font-bold text-blue-500">{g.salesCount}</td>
+                                    <td className="px-6 py-4 font-bold text-red-500">{g.wishlistCount}</td>
                                     <td className="px-6 py-4 opacity-70">{g.reviewCount}</td>
                                 </tr>
                             ))}

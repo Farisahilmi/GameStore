@@ -2,11 +2,51 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBolt } from '@fortawesome/free-solid-svg-icons';
+import { faBolt, faClock } from '@fortawesome/free-solid-svg-icons';
 import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 
 import { HeroSkeleton } from './Skeleton';
+
+const CountdownTimer = ({ targetDate }) => {
+    const [timeLeft, setTimeLeft] = useState({ h: 0, m: 0, s: 0 });
+
+    useEffect(() => {
+        const calculateTimeLeft = () => {
+            const difference = +new Date(targetDate) - +new Date();
+            if (difference > 0) {
+                return {
+                    h: Math.floor((difference / (1000 * 60 * 60))),
+                    m: Math.floor((difference / 1000 / 60) % 60),
+                    s: Math.floor((difference / 1000) % 60),
+                };
+            }
+            return null;
+        };
+
+        const timer = setInterval(() => {
+            const left = calculateTimeLeft();
+            if (left) setTimeLeft(left);
+            else clearInterval(timer);
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [targetDate]);
+
+    if (timeLeft.h === 0 && timeLeft.m === 0 && timeLeft.s === 0) return null;
+
+    return (
+        <div className="flex gap-3 items-center bg-red-600/20 text-red-500 px-5 py-2.5 rounded-2xl border border-red-500/20 backdrop-blur-md animate-pulse">
+            <FontAwesomeIcon icon={faClock} className="text-xs" />
+            <div className="flex flex-col">
+                <span className="text-[8px] font-black uppercase tracking-[0.2em] opacity-70 leading-none mb-1">Flash Sale Ends</span>
+                <span className="text-sm font-black font-mono leading-none tracking-tighter">
+                    {String(timeLeft.h).padStart(2, '0')}:{String(timeLeft.m).padStart(2, '0')}:{String(timeLeft.s).padStart(2, '0')}
+                </span>
+            </div>
+        </div>
+    );
+};
 
 const Hero = ({ directPurchase }) => {
   const { theme } = useTheme();
@@ -105,7 +145,7 @@ const Hero = ({ directPurchase }) => {
   const currentGame = slides[currentSlide];
 
   return (
-    <div className={`relative h-[600px] md:h-[700px] flex items-center mb-16 rounded-[3rem] overflow-hidden ${theme.colors.shadow} mx-auto max-w-[96%] mt-8 border ${theme.colors.border} group transition-all duration-700`}>
+    <div className={`relative h-[400px] md:h-[500px] flex items-center mb-16 rounded-[3rem] overflow-hidden ${theme.colors.shadow} mx-auto max-w-[96%] mt-8 border ${theme.colors.border} group transition-all duration-700`}>
       {/* Background Slideshow */}
       {slides.map((slide, index) => (
         <motion.div 
@@ -142,6 +182,9 @@ const Hero = ({ directPurchase }) => {
                 <span className="bg-white/10 backdrop-blur-md text-white/60 text-[10px] md:text-xs px-4 py-2 rounded-full border border-white/10 font-bold">
                     {currentGame.genre}
                 </span>
+            )}
+            {currentGame.flashSaleEnd && new Date(currentGame.flashSaleEnd) > new Date() && (
+                <CountdownTimer targetDate={currentGame.flashSaleEnd} />
             )}
         </motion.div>
         

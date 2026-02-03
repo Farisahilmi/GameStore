@@ -174,6 +174,15 @@ const createTransaction = async (userId, gameIds, recipientId = null, paymentMet
       }
     });
 
+    // Award Loyalty Points to Buyer
+    const pointsToAward = games.reduce((sum, game) => sum + (game.pointsAwarded || 0), 0);
+    if (pointsToAward > 0) {
+        await prisma.user.update({
+            where: { id: userId },
+            data: { loyaltyPoints: { increment: pointsToAward } }
+        });
+    }
+
     // Add to target User's Library
     await prisma.library.createMany({
       data: gameIds.map(gameId => ({

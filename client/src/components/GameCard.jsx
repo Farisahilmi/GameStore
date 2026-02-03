@@ -1,16 +1,40 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCartPlus, faBolt, faStar, faGamepad } from '@fortawesome/free-solid-svg-icons';
-import { motion } from 'framer-motion';
+import { motion, useMotionValue, useTransform } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 
 const GameCard = ({ game, onBuy, onBuyNow, isOwned }) => {
   const { theme } = useTheme();
+  
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+
+  const rotateX = useTransform(y, [-100, 100], [10, -10]);
+  const rotateY = useTransform(x, [-100, 100], [-10, 10]);
+
+  function handleMouse(event) {
+      const rect = event.currentTarget.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      x.set(event.clientX - centerX);
+      y.set(event.clientY - centerY);
+  }
+
+  function handleMouseLeave() {
+      x.set(0);
+      y.set(0);
+  }
+
   if (!game) return null; // Defensive check
   const { title, originalPrice, finalPrice, discountTotal, imageUrl, categories, avgRating, reviewCount, activeSaleName } = game;
 
   return (
+    <div style={{ perspective: 1000 }} className="h-full">
     <motion.div 
+        onMouseMove={handleMouse}
+        onMouseLeave={handleMouseLeave}
+        style={{ rotateX, rotateY }}
         whileHover={{ y: -12, scale: 1.03 }}
         whileTap={{ scale: 0.98 }}
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
@@ -121,6 +145,7 @@ const GameCard = ({ game, onBuy, onBuyNow, isOwned }) => {
         </div>
       </div>
     </motion.div>
+    </div>
   );
 };
 

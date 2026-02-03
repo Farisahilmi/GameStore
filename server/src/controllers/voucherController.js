@@ -101,7 +101,8 @@ const createVoucher = async (req, res, next) => {
                 code,
                 discountPercent,
                 maxUses,
-                expiryDate: new Date(expiryDate)
+                expiryDate: new Date(expiryDate),
+                publisherId: req.user.role === 'ADMIN' ? null : req.user.id
             }
         });
 
@@ -117,6 +118,23 @@ const createVoucher = async (req, res, next) => {
 const getAllVouchers = async (req, res, next) => {
     try {
         const vouchers = await prisma.voucher.findMany({
+            orderBy: { createdAt: 'desc' },
+            include: { publisher: { select: { id: true, name: true } } }
+        });
+        res.status(200).json({
+            success: true,
+            data: vouchers
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const getMyVouchers = async (req, res, next) => {
+    try {
+        const where = req.user.role === 'ADMIN' ? {} : { publisherId: req.user.id };
+        const vouchers = await prisma.voucher.findMany({
+            where,
             orderBy: { createdAt: 'desc' }
         });
         res.status(200).json({
@@ -128,8 +146,38 @@ const getAllVouchers = async (req, res, next) => {
     }
 };
 
+const deleteVoucher = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const voucher = await prisma.voucher.findUnique({ where: { id: parseInt(id) } });
+
+        if (!voucher) {
+            const error = new Error('Voucher not found');
+            error.statusCode = 404;
+            throw error;
+        }
+
+        if (req.user.role !== 'ADMIN' && voucher.publisherId !== req.user.id) {
+            const error = new Error('Not authorized to delete this voucher');
+            error.statusCode = 403;
+            throw error;
+        }
+
+        await prisma.voucher.delete({ where: { id: parseInt(id) } });
+
+        res.status(200).json({
+            success: true,
+            message: 'Voucher deleted successfully'
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     validateVoucher,
     createVoucher,
-    getAllVouchers
+    getAllVouchers,
+    getMyVouchers,
+    deleteVoucher
 };

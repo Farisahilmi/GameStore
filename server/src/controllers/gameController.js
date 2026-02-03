@@ -10,7 +10,14 @@ const gameSchema = Joi.object({
   imageUrl: Joi.string().uri().optional(),
   releaseDate: Joi.date().optional(),
   categoryNames: Joi.array().items(Joi.string()).optional(),
-  screenshots: Joi.array().items(Joi.string().uri()).optional()
+  screenshots: Joi.array().items(Joi.string().uri()).optional(),
+  isEarlyAccess: Joi.boolean().optional(),
+  contentRating: Joi.string().valid('EVERYONE', 'TEEN', 'MATURE').optional(),
+  minRequirements: Joi.string().allow('', null).optional(),
+  recRequirements: Joi.string().allow('', null).optional(),
+  socialLinks: Joi.string().allow('', null).optional(),
+  pointsAwarded: Joi.number().min(0).optional(),
+  flashSaleEnd: Joi.date().allow(null).optional()
 });
 
 const updateGameSchema = Joi.object({
@@ -21,7 +28,14 @@ const updateGameSchema = Joi.object({
   imageUrl: Joi.string().uri().optional(),
   releaseDate: Joi.date().optional(),
   categoryNames: Joi.array().items(Joi.string()).optional(),
-  screenshots: Joi.array().items(Joi.string().uri()).optional()
+  screenshots: Joi.array().items(Joi.string().uri()).optional(),
+  isEarlyAccess: Joi.boolean().optional(),
+  contentRating: Joi.string().valid('EVERYONE', 'TEEN', 'MATURE').optional(),
+  minRequirements: Joi.string().allow('', null).optional(),
+  recRequirements: Joi.string().allow('', null).optional(),
+  socialLinks: Joi.string().allow('', null).optional(),
+  pointsAwarded: Joi.number().min(0).optional(),
+  flashSaleEnd: Joi.date().allow(null).optional()
 });
 
 const getAllGames = async (req, res, next) => {

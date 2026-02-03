@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faCreditCard, faShieldAlt, faArrowUp, faArrowDown } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faCreditCard, faShieldAlt, faArrowUp, faArrowDown, faStar, faCoins } from '@fortawesome/free-solid-svg-icons';
 import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 
@@ -78,7 +78,7 @@ const Wallet = ({ user, refreshUser }) => {
                     </div>
                 </motion.div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     <div className={`${theme.colors.card} p-5 rounded-3xl border ${theme.colors.border} shadow-lg`}>
                         <div className="flex items-center gap-3 mb-3">
                             <div className="w-8 h-8 rounded-full bg-green-500/20 text-green-500 flex items-center justify-center text-xs">
@@ -96,6 +96,15 @@ const Wallet = ({ user, refreshUser }) => {
                             <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Total Spent</span>
                         </div>
                         <div className="text-2xl font-black tracking-tighter">$845.20</div>
+                    </div>
+                    <div className={`${theme.colors.card} p-5 rounded-3xl border ${theme.colors.border} shadow-lg bg-gradient-to-br from-yellow-500/5 to-transparent`}>
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="w-8 h-8 rounded-full bg-yellow-500/20 text-yellow-500 flex items-center justify-center text-xs">
+                                <FontAwesomeIcon icon={faCoins} />
+                            </div>
+                            <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Loyalty Points</span>
+                        </div>
+                        <div className="text-2xl font-black tracking-tighter text-yellow-500">{user?.loyaltyPoints || 0}</div>
                     </div>
                 </div>
             </div>

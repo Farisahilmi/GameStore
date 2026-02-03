@@ -199,9 +199,17 @@ const BrowseGames = ({ addToCart, library }) => {
                                 <button 
                                     key={preset.label}
                                     onClick={() => {
-                                        setMinPrice(preset.min);
-                                        setMaxPrice(preset.max);
-                                        updateFilters({ minPrice: preset.min, maxPrice: preset.max });
+                                        if (minPrice === preset.min && maxPrice === preset.max) {
+                                            // Deselect
+                                            setMinPrice('');
+                                            setMaxPrice('');
+                                            updateFilters({ minPrice: '', maxPrice: '' });
+                                        } else {
+                                            // Select
+                                            setMinPrice(preset.min);
+                                            setMaxPrice(preset.max);
+                                            updateFilters({ minPrice: preset.min, maxPrice: preset.max });
+                                        }
                                     }}
                                     className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all border ${
                                         minPrice === preset.min && maxPrice === preset.max
@@ -221,13 +229,13 @@ const BrowseGames = ({ addToCart, library }) => {
                     <select 
                         value={selectedSort}
                         onChange={(e) => updateFilters({ sort: e.target.value })}
-                        className={`w-full ${theme.name === 'Clean Light' ? 'bg-gray-100' : 'bg-black/20'} ${theme.colors.text} p-3 rounded-xl border ${theme.colors.border} outline-none focus:border-steam-accent text-sm font-bold cursor-pointer shadow-inner`}
+                        className={`w-full ${theme.colors.card} ${theme.colors.text} p-3 rounded-xl border ${theme.colors.border} outline-none focus:border-steam-accent text-sm font-bold cursor-pointer shadow-inner`}
                     >
-                        <option value="newest">Newest First</option>
-                        <option value="oldest">Oldest First</option>
-                        <option value="price_asc">Price: Low to High</option>
-                        <option value="price_desc">Price: High to Low</option>
-                        <option value="name_asc">Name: A-Z</option>
+                        <option value="newest" className="text-black">Newest First</option>
+                        <option value="oldest" className="text-black">Oldest First</option>
+                        <option value="price_asc" className="text-black">Price: Low to High</option>
+                        <option value="price_desc" className="text-black">Price: High to Low</option>
+                        <option value="name_asc" className="text-black">Name: A-Z</option>
                     </select>
                 </div>
 
@@ -236,6 +244,9 @@ const BrowseGames = ({ addToCart, library }) => {
                         setSearchTerm('');
                         setMinPrice('');
                         setMaxPrice('');
+                        // Also reset category and sort
+                        setSelectedCategory('');
+                        setSelectedSort('newest');
                         updateFilters({ search: '', category: '', sort: 'newest', minPrice: '', maxPrice: '' });
                     }}
                     className={`w-full py-3 rounded-xl border-2 border-dashed ${theme.colors.border} opacity-40 hover:opacity-100 hover:border-red-500/50 hover:text-red-500 transition-all text-xs font-black uppercase tracking-widest`}
@@ -278,13 +289,13 @@ const BrowseGames = ({ addToCart, library }) => {
 
                         {/* Pagination */}
                         {totalPages > 1 && (
-                            <div className="flex justify-center items-center gap-3 mt-16">
+                            <div className="flex justify-center items-center gap-4 mt-16">
                                 <button 
                                     onClick={() => updateFilters({ page: (currentPage - 1).toString() })}
                                     disabled={currentPage === 1}
-                                    className={`px-6 py-3 rounded-xl font-bold transition ${currentPage === 1 ? 'opacity-20 grayscale cursor-not-allowed' : 'bg-black/20 hover:bg-steam-accent hover:text-white border border-white/5'}`}
+                                    className={`px-4 py-2 bg-steam-light text-white rounded disabled:opacity-30 disabled:cursor-not-allowed hover:bg-steam-hover transition`}
                                 >
-                                    Prev
+                                    Previous
                                 </button>
                                 
                                 <div className="flex gap-2">
@@ -292,7 +303,7 @@ const BrowseGames = ({ addToCart, library }) => {
                                         <button
                                             key={i + 1}
                                             onClick={() => updateFilters({ page: (i + 1).toString() })}
-                                            className={`w-12 h-12 rounded-xl font-black transition-all ${currentPage === i + 1 ? 'bg-steam-accent text-white shadow-xl scale-110' : 'bg-black/10 opacity-40 hover:opacity-100 hover:bg-black/20'}`}
+                                            className={`w-10 h-10 rounded font-bold transition ${currentPage === i + 1 ? 'bg-steam-accent text-white shadow-lg shadow-blue-500/50' : 'bg-steam-light text-gray-400 hover:text-white'}`}
                                         >
                                             {i + 1}
                                         </button>
@@ -302,7 +313,7 @@ const BrowseGames = ({ addToCart, library }) => {
                                 <button 
                                     onClick={() => updateFilters({ page: (currentPage + 1).toString() })}
                                     disabled={currentPage === totalPages}
-                                    className={`px-6 py-3 rounded-xl font-bold transition ${currentPage === totalPages ? 'opacity-20 grayscale cursor-not-allowed' : 'bg-black/20 hover:bg-steam-accent hover:text-white border border-white/5'}`}
+                                    className={`px-4 py-2 bg-steam-light text-white rounded disabled:opacity-30 disabled:cursor-not-allowed hover:bg-steam-hover transition`}
                                 >
                                     Next
                                 </button>

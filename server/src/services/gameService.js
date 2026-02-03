@@ -172,7 +172,11 @@ const getGameById = async (id) => {
 };
 
 const createGame = async (data, publisherId) => {
-  const { title, description, price, discount, imageUrl, releaseDate, categoryNames, screenshots } = data;
+  const { 
+    title, description, price, discount, imageUrl, releaseDate, 
+    categoryNames, screenshots, isEarlyAccess, contentRating,
+    minRequirements, recRequirements, socialLinks, pointsAwarded, flashSaleEnd 
+  } = data;
 
   // Prepare category connections or creations
   let categoriesConnect = [];
@@ -192,6 +196,13 @@ const createGame = async (data, publisherId) => {
       imageUrl,
       releaseDate: releaseDate ? new Date(releaseDate) : new Date(),
       publisherId,
+      isEarlyAccess: isEarlyAccess || false,
+      contentRating: contentRating || 'EVERYONE',
+      minRequirements,
+      recRequirements,
+      socialLinks,
+      pointsAwarded: pointsAwarded || 0,
+      flashSaleEnd: flashSaleEnd ? new Date(flashSaleEnd) : null,
       categories: {
         connectOrCreate: categoriesConnect
       },
@@ -201,9 +212,30 @@ const createGame = async (data, publisherId) => {
     },
     include: {
       categories: true,
-      screenshots: true
+      screenshots: true,
+      publisher: { select: { id: true, name: true } }
     }
   });
+
+  // Notify followers
+  try {
+    const followers = await prisma.follow.findMany({
+      where: { publisherId },
+      select: { userId: true }
+    });
+
+    if (followers.length > 0) {
+      await prisma.notification.createMany({
+        data: followers.map(f => ({
+          userId: f.userId,
+          type: 'NEW_GAME',
+          message: `${game.publisher.name} has released a new game: ${game.title}!`
+        }))
+      });
+    }
+  } catch (err) {
+    console.error('Failed to send new game notifications', err);
+  }
 
   return await attachGameMetadata(game);
 };
@@ -224,7 +256,11 @@ const updateGame = async (id, data, userId, userRole) => {
     throw error;
   }
 
-  const { title, description, price, discount, imageUrl, releaseDate, categoryNames, screenshots } = data;
+  const { 
+    title, description, price, discount, imageUrl, releaseDate, 
+    categoryNames, screenshots, isEarlyAccess, contentRating,
+    minRequirements, recRequirements, socialLinks, pointsAwarded, flashSaleEnd 
+  } = data;
   
   const updateData = {
     title,
@@ -233,6 +269,13 @@ const updateGame = async (id, data, userId, userRole) => {
     discount,
     imageUrl,
     releaseDate: releaseDate ? new Date(releaseDate) : undefined,
+    isEarlyAccess,
+    contentRating,
+    minRequirements,
+    recRequirements,
+    socialLinks,
+    pointsAwarded,
+    flashSaleEnd: flashSaleEnd !== undefined ? (flashSaleEnd ? new Date(flashSaleEnd) : null) : undefined
   };
 
   // If categories are updated

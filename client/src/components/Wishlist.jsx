@@ -60,7 +60,12 @@ const Wishlist = ({ addToCart, library }) => {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {wishlist.map(item => (
+          {wishlist.map(item => {
+            // Fix: Check if item.game exists. If not, fallback or skip.
+            // The API might return null for game if it was deleted but wishlist item remains (edge case)
+            if (!item.game) return null;
+            
+            return (
             <div key={item.id} className="relative group">
                 <Link to={`/games/${item.gameId}`} className="block h-full">
                     <GameCard 
@@ -83,7 +88,7 @@ const Wishlist = ({ addToCart, library }) => {
                     <FontAwesomeIcon icon={faTrash} size="sm" />
                 </button>
             </div>
-          ))}
+          )})}
         </div>
       )}
     </div>

@@ -201,7 +201,12 @@ const GameDetails = ({ addToCart, directPurchase, library }) => {
   if (!game) return null;
 
   return (
-    <div className={`min-h-screen ${theme.colors.bg} ${theme.colors.text} pt-10 pb-20 overflow-x-hidden`}>
+    <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className={`min-h-screen ${theme.colors.bg} ${theme.colors.text} pt-10 pb-20 overflow-x-hidden`}
+    >
       {/* Lightbox Overlay */}
       <AnimatePresence>
         {isLightboxOpen && (
@@ -463,7 +468,7 @@ const GameDetails = ({ addToCart, directPurchase, library }) => {
         )}
 
         {/* Tabs Selection */}
-        <div className={`mt-12 flex gap-8 border-b ${theme.colors.border}`}>
+        <div className={`mt-12 flex flex-wrap gap-8 border-b ${theme.colors.border}`}>
             <button 
                 onClick={() => setActiveTab('reviews')}
                 className={`pb-4 text-lg font-bold transition relative ${activeTab === 'reviews' ? theme.colors.text : 'opacity-50 hover:opacity-100'}`}
@@ -475,8 +480,15 @@ const GameDetails = ({ addToCart, directPurchase, library }) => {
                 onClick={() => setActiveTab('updates')}
                 className={`pb-4 text-lg font-bold transition relative ${activeTab === 'updates' ? theme.colors.text : 'opacity-50 hover:opacity-100'}`}
             >
-                Patch Notes & Updates ({updates.length})
+                Patch Notes ({updates.length})
                 {activeTab === 'updates' && <div className={`absolute bottom-0 left-0 w-full h-1 ${accentBg} rounded-t-full`}></div>}
+            </button>
+            <button 
+                onClick={() => setActiveTab('specs')}
+                className={`pb-4 text-lg font-bold transition relative ${activeTab === 'specs' ? theme.colors.text : 'opacity-50 hover:opacity-100'}`}
+            >
+                Specifications
+                {activeTab === 'specs' && <div className={`absolute bottom-0 left-0 w-full h-1 ${accentBg} rounded-t-full`}></div>}
             </button>
         </div>
 
@@ -664,7 +676,7 @@ const GameDetails = ({ addToCart, directPurchase, library }) => {
                             )}
                         </div>
                     </div>
-                ) : (
+                ) : activeTab === 'updates' ? (
                     <div className="mt-8 space-y-6 max-w-4xl mx-auto">
                         {updates.length === 0 ? (
                             <div className={`${theme.colors.card} p-12 rounded-lg text-center opacity-60 italic border ${theme.colors.border}`}>
@@ -696,6 +708,29 @@ const GameDetails = ({ addToCart, directPurchase, library }) => {
                             ))
                         )}
                     </div>
+                ) : (
+                    <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-12 max-w-5xl mx-auto animate-fadeIn">
+                        <div className={`${theme.colors.card} p-8 rounded-3xl border ${theme.colors.border} shadow-xl`}>
+                            <h3 className="text-xl font-black uppercase tracking-widest text-blue-500 mb-6">Minimum Requirements</h3>
+                            <div className="opacity-70 text-sm leading-relaxed whitespace-pre-wrap">
+                                {game.minRequirements || 'No minimum requirements specified.'}
+                            </div>
+                        </div>
+                        <div className={`${theme.colors.card} p-8 rounded-3xl border ${theme.colors.border} shadow-xl`}>
+                            <h3 className="text-xl font-black uppercase tracking-widest text-purple-500 mb-6">Recommended Requirements</h3>
+                            <div className="opacity-70 text-sm leading-relaxed whitespace-pre-wrap">
+                                {game.recRequirements || 'No recommended requirements specified.'}
+                            </div>
+                        </div>
+                        {game.socialLinks && (
+                            <div className={`col-span-full ${theme.colors.card} p-8 rounded-3xl border ${theme.colors.border} shadow-xl`}>
+                                <h3 className="text-xl font-black uppercase tracking-widest text-green-500 mb-6">Official Links & Social</h3>
+                                <div className="opacity-70 text-sm leading-relaxed whitespace-pre-wrap">
+                                    {game.socialLinks}
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 )}
             </motion.div>
         </AnimatePresence>
@@ -711,7 +746,7 @@ const GameDetails = ({ addToCart, directPurchase, library }) => {
              }}
          />
       </div>
-    </div>
+    </motion.div>
   );
 };
 

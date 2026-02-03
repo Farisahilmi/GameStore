@@ -53,7 +53,8 @@ const FriendSelectionModal = ({ isOpen, onClose, onSelect, gameTitle }) => {
           initial={{ scale: 0.9, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.9, opacity: 0, y: 20 }}
-          className={`${theme.colors.card} w-full max-w-md rounded-[2.5rem] border ${theme.colors.border} ${theme.colors.shadow} overflow-hidden relative z-10`}
+          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+          className={`${theme.colors.card} w-full max-w-md rounded-[2.5rem] border ${theme.colors.border} ${theme.colors.shadow} overflow-hidden relative z-10 backdrop-blur-2xl bg-opacity-80`}
         >
           <div className="p-8">
             <div className="flex justify-between items-center mb-6">

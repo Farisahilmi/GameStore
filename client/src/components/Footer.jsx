@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTwitter, faFacebook, faInstagram, faDiscord } from '@fortawesome/free-brands-svg-icons';
+import { faTwitter, faFacebook, faInstagram, faDiscord, faXTwitter } from '@fortawesome/free-brands-svg-icons';
 import { useTheme } from '../context/ThemeContext';
 
 const Footer = () => {
@@ -19,10 +19,10 @@ const Footer = () => {
                     Your ultimate destination for digital games. Discover, play, and connect with a global community of gamers.
                 </p>
                 <div className="flex gap-4">
-                    <a href="#" className={`w-8 h-8 rounded bg-black/20 flex items-center justify-center hover:${theme.colors.accent} hover:text-white transition`}><FontAwesomeIcon icon={faTwitter} /></a>
-                    <a href="#" className={`w-8 h-8 rounded bg-black/20 flex items-center justify-center hover:bg-blue-600 hover:text-white transition`}><FontAwesomeIcon icon={faFacebook} /></a>
-                    <a href="#" className={`w-8 h-8 rounded bg-black/20 flex items-center justify-center hover:bg-pink-600 hover:text-white transition`}><FontAwesomeIcon icon={faInstagram} /></a>
-                    <a href="#" className={`w-8 h-8 rounded bg-black/20 flex items-center justify-center hover:bg-indigo-500 hover:text-white transition`}><FontAwesomeIcon icon={faDiscord} /></a>
+                    <a href="#" className={`w-8 h-8 rounded bg-black/20 flex items-center justify-center hover:bg-black hover:text-white transition shadow-md hover:shadow-lg hover:-translate-y-1 transform`}><FontAwesomeIcon icon={faXTwitter} /></a>
+                    <a href="#" className={`w-8 h-8 rounded bg-black/20 flex items-center justify-center hover:bg-white hover:text-[#1877F2] transition shadow-md hover:shadow-lg hover:-translate-y-1 transform`}><FontAwesomeIcon icon={faFacebook} /></a>
+                    <a href="#" className={`w-8 h-8 rounded bg-black/20 flex items-center justify-center hover:bg-gradient-to-tr hover:from-[#fdf497] hover:via-[#fd5949] hover:to-[#d6249f] hover:text-white transition shadow-md hover:shadow-lg hover:-translate-y-1 transform`}><FontAwesomeIcon icon={faInstagram} /></a>
+                    <a href="#" className={`w-8 h-8 rounded bg-black/20 flex items-center justify-center hover:bg-[#5865F2] hover:text-white transition shadow-md hover:shadow-lg hover:-translate-y-1 transform`}><FontAwesomeIcon icon={faDiscord} /></a>
                 </div>
             </div>
 

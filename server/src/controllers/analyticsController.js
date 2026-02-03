@@ -95,6 +95,13 @@ const getDashboardStats = async (req, res, next) => {
         .sort((a, b) => b.value - a.value)
         .slice(0, 5);
 
+    // 7. Total Wishlist
+    const totalWishlist = await prisma.wishlist.count({
+        where: isPublisher ? {
+            game: { publisherId }
+        } : {}
+    });
+
     res.status(200).json({
       success: true,
       data: {
@@ -104,7 +111,8 @@ const getDashboardStats = async (req, res, next) => {
         totalRevenue,
         recentTransactions,
         chartData,
-        categoryData
+        categoryData,
+        totalWishlist
       }
     });
   } catch (error) {

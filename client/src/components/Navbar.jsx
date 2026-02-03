@@ -15,6 +15,7 @@ const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications 
   const [isSwitchModalOpen, setIsSwitchModalOpen] = useState(false);
   const [savedAccounts, setSavedAccounts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [gameSearchResults, setGameSearchResults] = useState([]);
   const [userSearchTerm, setUserSearchTerm] = useState('');
   const [userSearchResults, setUserSearchResults] = useState([]);
   const [pendingRequests, setPendingRequests] = useState([]);
@@ -27,6 +28,26 @@ const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+      const searchGames = async () => {
+          if (!searchTerm || searchTerm.length < 2) {
+              setGameSearchResults([]);
+              return;
+          }
+          try {
+              const res = await axios.get(`/api/games?search=${searchTerm}&limit=5`);
+              setGameSearchResults(res.data.data.games);
+          } catch (err) {
+              console.error(err);
+          }
+      };
+      const delayDebounceFn = setTimeout(() => {
+          searchGames();
+      }, 300);
+
+      return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm]);
 
   useEffect(() => {
       const searchUsers = async () => {
@@ -241,6 +262,39 @@ const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications 
                     />
                     <FontAwesomeIcon icon={faSearch} className="absolute left-4 top-1/2 -translate-y-1/2 opacity-30 text-xs" />
                 </form>
+                {gameSearchResults.length > 0 && (
+                    <div className={`absolute top-full left-0 w-full ${theme.colors.card} border ${theme.colors.border} rounded-2xl ${theme.colors.shadow} mt-2 z-50 overflow-hidden animate-slideUp`}>
+                        <div className="p-3 border-b border-white/5 bg-blue-500/5">
+                            <span className="text-[9px] font-black uppercase tracking-widest text-blue-400">Game Matches</span>
+                        </div>
+                        {gameSearchResults.map(game => (
+                            <Link 
+                                key={game.id} 
+                                to={`/games/${game.id}`}
+                                onClick={() => { setSearchTerm(''); setGameSearchResults([]); }}
+                                className={`flex items-center gap-4 p-3 hover:bg-white/5 transition border-b ${theme.colors.border} last:border-0`}
+                            >
+                                <img src={game.imageUrl} alt={game.title} className="w-10 h-14 object-cover rounded-lg shadow-md" />
+                                <div className="flex flex-col min-w-0">
+                                    <span className={`text-xs font-bold ${theme.colors.text} truncate`}>{game.title}</span>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <span className="text-[10px] text-green-400 font-black">${Number(game.price).toFixed(2)}</span>
+                                        {game.discount > 0 && (
+                                            <span className="text-[9px] bg-red-500/20 text-red-500 px-1.5 py-0.5 rounded-lg font-black">-{game.discount}%</span>
+                                        )}
+                                    </div>
+                                </div>
+                            </Link>
+                        ))}
+                        <Link 
+                            to={`/browse?search=${searchTerm}`}
+                            onClick={() => { setGameSearchResults([]); }}
+                            className="block p-3 text-center text-[10px] font-black uppercase tracking-widest text-blue-500 hover:bg-blue-500/5 transition"
+                        >
+                            View All Results
+                        </Link>
+                    </div>
+                )}
             </div>
             
             {user && (
@@ -424,6 +478,13 @@ const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications 
                                         </Link>
                                     )}
 
+                                    {(user.role === 'ADMIN' || user.role === 'PUBLISHER') && (
+                                        <Link to="/manage-games" onClick={() => setIsDropdownOpen(false)} className={`flex items-center gap-3 px-4 py-2.5 text-xs font-bold rounded-xl hover:bg-white/5 ${theme.colors.text} transition-all`}>
+                                            <FontAwesomeIcon icon={faGamepad} className="opacity-40 w-4" />
+                                            Manage Games
+                                        </Link>
+                                    )}
+
                                     {user.role === 'ADMIN' && (
                                         <Link to="/manage-users" onClick={() => setIsDropdownOpen(false)} className={`flex items-center gap-3 px-4 py-2.5 text-xs font-bold rounded-xl hover:bg-white/5 ${theme.colors.text} transition-all`}>
                                             Manage Users
@@ -526,7 +587,13 @@ const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications 
       {isSwitchModalOpen && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
               <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsSwitchModalOpen(false)}></div>
-              <div className={`${theme.colors.card} w-full max-w-md rounded-[2.5rem] border ${theme.colors.border} ${theme.colors.shadow} relative z-10 overflow-hidden`}>
+              <motion.div 
+                  initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                  animate={{ scale: 1, opacity: 1, y: 0 }}
+                  exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                  className={`${theme.colors.card} w-full max-w-md rounded-[2.5rem] border ${theme.colors.border} ${theme.colors.shadow} relative z-10 overflow-hidden backdrop-blur-2xl bg-opacity-80`}
+              >
                   <div className="p-8">
                       <h3 className={`text-2xl font-black ${theme.colors.text} mb-6 tracking-tighter italic`}>Switch <span className="text-blue-500">Account</span></h3>
                       
@@ -589,7 +656,7 @@ const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications 
                           </button>
                       </div>
                   </div>
-              </div>
+              </motion.div>
           </div>
       )}
 

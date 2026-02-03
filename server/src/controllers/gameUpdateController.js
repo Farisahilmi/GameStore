@@ -29,8 +29,29 @@ const createUpdate = async (req, res, next) => {
                 content,
                 version,
                 type: type || 'UPDATE'
-            }
+            },
+            include: { game: { include: { publisher: { select: { id: true, name: true } } } } }
         });
+
+        // Notify followers
+        try {
+            const followers = await prisma.follow.findMany({
+                where: { publisherId: update.game.publisherId },
+                select: { userId: true }
+            });
+
+            if (followers.length > 0) {
+                await prisma.notification.createMany({
+                    data: followers.map(f => ({
+                        userId: f.userId,
+                        type: 'GAME_UPDATE',
+                        message: `${update.game.publisher.name} has posted a new update for ${update.game.title}: ${update.title}!`
+                    }))
+                });
+            }
+        } catch (err) {
+            console.error('Failed to send game update notifications', err);
+        }
 
         res.status(201).json({
             success: true,

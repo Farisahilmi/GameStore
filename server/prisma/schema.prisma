@@ -19,6 +19,7 @@ model User {
   statusMessage  String?             // e.g., "Playing Cyberpunk 2077"
   lastActive     DateTime            @default(now())
   walletBalance  Decimal             @default(0)
+  loyaltyPoints  Int                 @default(0)
   createdAt      DateTime            @default(now())
   updatedAt      DateTime            @updatedAt
   activities     Activity[]
@@ -67,25 +68,32 @@ model ForumComment {
 }
 
 model Game {
-  id           Int           @id @default(autoincrement())
-  title        String
-  description  String
-  price        Decimal       @default(0)
-  discount     Int           @default(0)
-  imageUrl     String?
-  releaseDate  DateTime      @default(now())
-  publisherId  Int?
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  publisher    User?         @relation("PublisherGames", fields: [publisherId], references: [id], onDelete: SetNull)
-  updates      GameUpdate[]
-  inLibraries  Library[]
-  reviews      Review[]
-  inWishlists  Wishlist[]
-  categories   Category[]    @relation("CategoryToGame")
-  transactions Transaction[] @relation("GameToTransaction")
-  screenshots  GameImage[]
-  forumPosts   ForumPost[]
+  id              Int           @id @default(autoincrement())
+  title           String
+  description     String
+  price           Decimal       @default(0)
+  discount        Int           @default(0)
+  imageUrl        String?
+  releaseDate     DateTime      @default(now())
+  publisherId     Int?
+  isEarlyAccess   Boolean       @default(false)
+  contentRating   String        @default("EVERYONE") // EVERYONE, TEEN, MATURE
+  minRequirements String?       // JSON string
+  recRequirements String?       // JSON string
+  socialLinks     String?       // JSON string
+  pointsAwarded   Int           @default(0)
+  flashSaleEnd    DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  publisher       User?         @relation("PublisherGames", fields: [publisherId], references: [id], onDelete: SetNull)
+  updates         GameUpdate[]
+  inLibraries     Library[]
+  reviews         Review[]
+  inWishlists     Wishlist[]
+  categories      Category[]    @relation("CategoryToGame")
+  transactions    Transaction[] @relation("GameToTransaction")
+  screenshots     GameImage[]
+  forumPosts      ForumPost[]
 }
 
 model GameImage {
@@ -258,6 +266,7 @@ model Voucher {
   usedCount       Int            @default(0)
   expiryDate      DateTime
   isActive        Boolean        @default(true)
+  publisherId     Int?           // Optional: link to a specific publisher
   createdAt       DateTime       @default(now())
   usages          VoucherUsage[]
 }

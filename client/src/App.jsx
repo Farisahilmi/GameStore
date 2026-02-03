@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate, Link, useSearchParams, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { Toaster, toast } from 'react-hot-toast';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faBolt, faCheckCircle, faBook, faGamepad, faRocket, faArrowRight, faShoppingCart } from '@fortawesome/free-solid-svg-icons';
 import { io } from 'socket.io-client';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import ManageGames from './ManageGames.jsx';
 import ManageUsers from './ManageUsers.jsx';
@@ -137,7 +137,13 @@ const Home = ({ addToCart, user, directPurchase, library }) => {
   );
 
   return (
-    <div className={`relative min-h-screen ${theme.colors.bg} overflow-hidden transition-colors duration-500`}>
+    <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        transition={{ duration: 0.3 }}
+        className={`relative min-h-screen ${theme.colors.bg} overflow-hidden transition-colors duration-500`}
+    >
       {/* Animated Background */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
           <div className={`absolute inset-0 bg-gradient-to-br ${theme.colors.gradient} animate-gradient-slow opacity-80`}></div>
@@ -147,23 +153,37 @@ const Home = ({ addToCart, user, directPurchase, library }) => {
           <div className="absolute top-[-10%] right-[-10%] w-96 h-96 bg-purple-600/20 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
           <div className={`absolute bottom-[-10%] left-[20%] w-96 h-96 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob animation-delay-4000 ${theme.colors.accent.replace('text-', 'bg-').replace('600', '600/20').replace('400', '400/20')}`}></div>
 
-          {/* Floating Controller Shapes (PlayStation & Xbox Vibes) - More & Random */}
+          {/* Floating Controller Shapes (PlayStation & Xbox Vibes) - Animated */}
           
-          {/* Group 1: PlayStation Shapes */}
+          {/* Group 1: PlayStation Shapes - Moving */}
           <div className="absolute top-[15%] left-[10%] opacity-60 animate-float-slow filter drop-shadow-[0_0_10px_rgba(34,197,94,0.5)]" style={{ animationDelay: '0s' }}>
-              <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5">
-                  <path d="M12 4L21 20H3L12 4Z" />
-              </svg>
+              <motion.div animate={{ y: [0, -20, 0], rotate: [0, 10, 0] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}>
+                <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5">
+                    <path d="M12 4L21 20H3L12 4Z" />
+                </svg>
+              </motion.div>
           </div>
-          <div className="absolute top-[70%] right-[20%] w-24 h-24 rounded-full border-[8px] border-red-500/50 animate-float-medium filter drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]" style={{ animationDelay: '2s' }}></div>
-          <div className="absolute top-[40%] left-[85%] w-20 h-20 border-[8px] border-pink-500/50 animate-float-slow filter drop-shadow-[0_0_10px_rgba(236,72,153,0.5)]" style={{ animationDelay: '5s' }}></div>
-          <div className="absolute top-[60%] left-[15%] text-9xl text-blue-500/50 animate-float-fast font-bold filter drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]" style={{ animationDelay: '1s' }}>✕</div>
+          <motion.div 
+            animate={{ y: [0, 30, 0], x: [0, 10, 0] }} 
+            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute top-[70%] right-[20%] w-24 h-24 rounded-full border-[8px] border-red-500/50 filter drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]" 
+          ></motion.div>
+          <motion.div 
+            animate={{ y: [0, -25, 0], rotate: [0, -10, 0] }} 
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute top-[40%] left-[85%] w-20 h-20 border-[8px] border-pink-500/50 filter drop-shadow-[0_0_10px_rgba(236,72,153,0.5)]" 
+          ></motion.div>
+          <motion.div 
+            animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0.8, 0.5] }} 
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute top-[60%] left-[15%] text-9xl text-blue-500/50 font-bold filter drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]" 
+          >✕</motion.div>
 
-          {/* Group 2: Xbox Buttons */}
-          <div className="absolute top-[25%] right-[35%] w-20 h-20 rounded-full border-[6px] border-green-500/50 flex items-center justify-center text-green-500/50 font-bold text-5xl animate-float-slow filter drop-shadow-[0_0_8px_rgba(34,197,94,0.4)]" style={{ animationDelay: '7s' }}>A</div>
-          <div className="absolute top-[85%] left-[5%] w-16 h-16 rounded-full border-[6px] border-red-500/50 flex items-center justify-center text-red-500/50 font-bold text-4xl animate-float-medium filter drop-shadow-[0_0_8px_rgba(239,68,68,0.4)]" style={{ animationDelay: '3s' }}>B</div>
-          <div className="absolute top-[10%] right-[10%] w-24 h-24 rounded-full border-[6px] border-yellow-500/50 flex items-center justify-center text-yellow-500/50 font-bold text-6xl animate-float-fast filter drop-shadow-[0_0_8px_rgba(234,179,8,0.4)]" style={{ animationDelay: '4s' }}>Y</div>
-          <div className="absolute top-[50%] left-[50%] w-20 h-20 rounded-full border-[6px] border-blue-500/50 flex items-center justify-center text-blue-500/50 font-bold text-5xl animate-float-slow filter drop-shadow-[0_0_8px_rgba(59,130,246,0.4)]" style={{ animationDelay: '6s' }}>X</div>
+          {/* Group 2: Xbox Buttons - Floating */}
+          <motion.div animate={{ y: [0, -15, 0] }} transition={{ duration: 4, repeat: Infinity }} className="absolute top-[25%] right-[35%] w-20 h-20 rounded-full border-[6px] border-green-500/50 flex items-center justify-center text-green-500/50 font-bold text-5xl filter drop-shadow-[0_0_8px_rgba(34,197,94,0.4)]">A</motion.div>
+          <motion.div animate={{ y: [0, 20, 0] }} transition={{ duration: 5, repeat: Infinity, delay: 1 }} className="absolute top-[85%] left-[5%] w-16 h-16 rounded-full border-[6px] border-red-500/50 flex items-center justify-center text-red-500/50 font-bold text-4xl filter drop-shadow-[0_0_8px_rgba(239,68,68,0.4)]">B</motion.div>
+          <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 3, repeat: Infinity, delay: 2 }} className="absolute top-[10%] right-[10%] w-24 h-24 rounded-full border-[6px] border-yellow-500/50 flex items-center justify-center text-yellow-500/50 font-bold text-6xl filter drop-shadow-[0_0_8px_rgba(234,179,8,0.4)]">Y</motion.div>
+          <motion.div animate={{ y: [0, 15, 0] }} transition={{ duration: 6, repeat: Infinity, delay: 0.5 }} className="absolute top-[50%] left-[50%] w-20 h-20 rounded-full border-[6px] border-blue-500/50 flex items-center justify-center text-blue-500/50 font-bold text-5xl filter drop-shadow-[0_0_8px_rgba(59,130,246,0.4)]">X</motion.div>
 
           {/* Group 3: Extra Random Particles (Small & Fast) */}
           <div className="absolute top-[5%] left-[40%] opacity-40 animate-float-fast filter drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]" style={{ animationDelay: '1.5s' }}>
@@ -192,7 +212,7 @@ const Home = ({ addToCart, user, directPurchase, library }) => {
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className={`mb-20 ${theme.colors.glass} ${theme.colors.shadow} rounded-[3rem] p-8 md:p-14 border ${theme.colors.border} flex flex-col lg:flex-row items-center justify-between gap-12 relative overflow-hidden group`}
+                className={`mb-20 ${theme.colors.glass} ${theme.colors.shadow} rounded-[3rem] p-6 md:p-10 border ${theme.colors.border} flex flex-col lg:flex-row items-center justify-between gap-8 relative overflow-hidden group`}
             >
                 {/* Decorative background shape */}
                 <div className={`absolute -right-20 -top-20 w-80 h-80 ${theme.colors.accent.replace('text-', 'bg-')}/5 rounded-full blur-[100px] group-hover:scale-150 transition-all duration-1000`}></div>
@@ -383,9 +403,9 @@ const Home = ({ addToCart, user, directPurchase, library }) => {
             </div>
           </div>
         )}
+        </div>
       </div>
-      </div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -415,7 +435,12 @@ const Login = ({ setUser }) => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[80vh] bg-steam-dark">
+    <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 1.05 }}
+        className="flex items-center justify-center min-h-[80vh] bg-steam-dark"
+    >
         <div className="bg-steam-light p-8 rounded-lg shadow-2xl w-full max-w-md border border-gray-800">
             <h2 className="text-3xl font-bold text-steam-accent mb-6 text-center">Sign In</h2>
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -447,7 +472,7 @@ const Login = ({ setUser }) => {
                 </button>
             </form>
         </div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -473,7 +498,12 @@ const Register = ({ setUser }) => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[80vh] bg-steam-dark">
+    <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 1.05 }}
+        className="flex items-center justify-center min-h-[80vh] bg-steam-dark"
+    >
         <div className="bg-steam-light p-8 rounded-lg shadow-2xl w-full max-w-md border border-gray-800">
             <h2 className="text-3xl font-bold text-steam-accent mb-6 text-center">Create Account</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -495,7 +525,7 @@ const Register = ({ setUser }) => {
                 </button>
             </form>
         </div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -519,6 +549,7 @@ import { ThemeProvider, useTheme } from './context/ThemeContext';
 
 const AppContent = ({ user, setUser, refreshUser }) => {
   const { theme } = useTheme();
+  const location = useLocation();
   const [cart, setCart] = useState([]);
   const [library, setLibrary] = useState([]); // Array of owned game IDs
   const [notifications, setNotifications] = useState([]);
@@ -549,8 +580,18 @@ const AppContent = ({ user, setUser, refreshUser }) => {
     if (user) {
       fetchLibrary();
 
-      const newSocket = io(import.meta.env.VITE_API_URL || 'http://localhost:3000');
+      // Use VITE_API_URL if set (production), otherwise default to undefined (same origin) to use Vite proxy
+      const socketUrl = import.meta.env.VITE_API_URL || undefined;
+      const newSocket = io(socketUrl, {
+        transports: ['websocket', 'polling'], // Try websocket first, fallback to polling
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+      });
       setSocket(newSocket);
+
+      newSocket.on('connect_error', (err) => {
+        console.error('Socket connection error:', err);
+      });
 
       newSocket.emit('join', user.id);
 
@@ -653,7 +694,7 @@ const AppContent = ({ user, setUser, refreshUser }) => {
   };
 
   return (
-    <Router>
+    <>
       <Toaster position="top-center" toastOptions={{
         style: {
           background: '#333',
@@ -743,7 +784,8 @@ const AppContent = ({ user, setUser, refreshUser }) => {
             setNotifications={setNotifications}
           />
           <div className="flex-1">
-          <Routes>
+          <AnimatePresence mode="wait">
+          <Routes location={location} key={location.pathname}>
             <Route path="/" element={<Home addToCart={addToCart} user={user} directPurchase={directPurchase} library={library} />} />
             <Route path="/publisher/:id" element={<PublisherProfile />} />
             <Route path="/games/:id" element={<GameDetails addToCart={addToCart} directPurchase={directPurchase} library={library} />} />
@@ -791,10 +833,11 @@ const AppContent = ({ user, setUser, refreshUser }) => {
           <Route path="/cookies" element={<Cookies />} />
           <Route path="/refunds" element={<Refunds />} />
         </Routes>
+        </AnimatePresence>
         </div>
         <Footer />
       </div>
-    </Router>
+    </>
   );
 };
 
@@ -826,7 +869,9 @@ const App = () => {
 
   return (
     <ThemeProvider user={user}>
-      <AppContent user={user} setUser={setUser} refreshUser={refreshUser} />
+      <Router>
+        <AppContent user={user} setUser={setUser} refreshUser={refreshUser} />
+      </Router>
     </ThemeProvider>
   );
 };
