@@ -1,106 +1,160 @@
-# 🎮 GameStore Project
+# 🎮 GameStore - Premium Digital Distribution Platform
 
-GameStore is a full-stack e-commerce web application for digital games, featuring a modern React frontend and a robust Express.js backend with SQLite database.
+GameStore adalah platform e-commerce *full-stack* modern untuk distribusi game digital, dirancang dengan inspirasi dari platform besar seperti Steam dan Epic Games Store. Proyek ini menghadirkan pengalaman pengguna (UI/UX) yang premium, interaktif, dan responsif.
 
-## 🚀 Prerequisites
+![GameStore UI](https://via.placeholder.com/800x400?text=GameStore+Premium+UI)
 
-Before you begin, ensure you have the following installed on your machine:
+## ✨ Fitur Utama
 
-- **Node.js** (v18 or higher recommended)
-- **npm** (Node Package Manager)
+### � Untuk Pengguna (Gamer)
+*   **Storefront Modern**: Browsing game dengan filter, sorting, dan pencarian *autocomplete* real-time.
+*   **Discovery Queue**: Rekomendasi game personal berbasis algoritma cerdas.
+*   **Manajemen Akun**: Profil kustom, Wallet system (Top-up), dan Library game.
+*   **Sistem Sosial**:
+    *   **Friend System**: Tambah teman, lihat status online/offline.
+    *   **Activity Feed**: Lihat aktivitas teman (beli game, review, dll).
+    *   **Real-time Notifications**: Notifikasi instan untuk pesan, request teman, dan diskon.
+    *   **Community Hub**: Forum diskusi dan postingan komunitas.
+*   **Transaksi**: Shopping Cart, Wishlist, dan pembelian instan (Direct Purchase/Gift).
+*   **Review & Rating**: Berikan ulasan dan rating untuk game yang dimiliki.
 
-## 🛠️ Installation & Setup
+### 🏢 Untuk Publisher & Developer
+*   **Developer Dashboard**: Portal khusus untuk mengelola game yang dipublikasikan.
+*   **Manajemen Game**: Tambah, edit, dan hapus listing game.
+*   **Sales & Diskon**: Atur periode diskon (Flash Sale, Holiday Sale).
+*   **Analytics**: Grafik penjualan dan performa game.
+*   **Game Updates**: Posting berita update/patch notes untuk pemain.
 
-### 1. Clone or Download the Repository
+### 🛡️ Untuk Admin
+*   **Admin Dashboard**: Ringkasan statistik global platform.
+*   **Manajemen User**: Kontrol penuh atas pengguna (termasuk ban/unban).
+*   **Validasi Konten**: Moderasi konten komunitas.
 
-If you haven't already, download the project source code to your local machine.
-
-### 2. Backend Setup (Server)
-
-The server handles the API, database, and authentication.
-
-1.  Open a terminal and navigate to the `server` directory:
-    ```bash
-    cd server
-    ```
-2.  Install dependencies:
-    ```bash
-    npm install
-    ```
-3.  Set up environment variables:
-    - Create a `.env` file in the `server` folder (or check if one exists).
-    - Ensure it contains the following configuration for local development:
-      ```env
-      DATABASE_URL="file:./dev.db"
-      PORT=3000
-      JWT_SECRET="supersecretkey_gamestore_project"
-      FRONTEND_URL="http://localhost:5173"
-      ```
-4.  Initialize the Database (SQLite) & Seed Data:
-    ```bash
-    npx prisma migrate dev --name init
-    node prisma/seed.js
-    ```
-5.  Start the Server:
-    ```bash
-    node index.js
-    ```
-    *(The server will run on http://localhost:3000)*
-
-### 3. Frontend Setup (Client)
-
-The client is the user interface built with React and Vite.
-
-1.  Open a **new** terminal window (keep the server running).
-2.  Navigate to the `client` directory:
-    ```bash
-    cd client
-    ```
-3.  Install dependencies:
-    ```bash
-    npm install
-    ```
-4.  Set up environment variables:
-    - Create a `.env` file in the `client` folder.
-    - Add the API URL configuration:
-      ```env
-      VITE_API_URL="http://localhost:3000"
-      ```
-5.  Start the Client:
-    ```bash
-    npm run dev
-    ```
-    *(The client will run on http://localhost:5173)*
-
-## 🏃‍♂️ How to Use
-
-1.  Open your browser and visit **http://localhost:5173**.
-2.  **Browse Games:** You can view the list of available games immediately.
-3.  **Register/Login:** To purchase games or use the wishlist, create a new account.
-    - Click **Login** > **Create Account**.
-4.  **Admin/Publisher Access:**
-    The database comes pre-seeded with some special accounts if you want to test advanced features:
-    - **Admin:** `admin@gamestore.com` / `password123`
-    - **Publisher (Rockstar):** `publisher@rockstar.com` / `password123`
-    - **Publisher (Sony):** `publisher@sony.com` / `password123`
-
-## 🗄️ Database Management (Optional)
-
-If you want to view or edit the database manually:
-
-1.  In the `server` directory, run:
-    ```bash
-    npx prisma studio
-    ```
-2.  Open **http://localhost:5555** in your browser.
-
-## ⚠️ Troubleshooting
-
-- **Blank Screen?**
-  - Ensure both Server (port 3000) and Client (port 5173) terminals are running.
-  - Check browser console (F12) for errors.
-- **Database Error?**
-  - If you see migration errors, try deleting `server/prisma/dev.db` and `server/prisma/migrations` folder, then re-run the migration command in step 2.4.
+### 🎨 UI/UX Premium
+*   **Glassmorphism Design**: Tampilan modern dengan efek transparansi dan blur.
+*   **Smooth Transitions**: Animasi perpindahan halaman yang mulus.
+*   **Interactive Elements**: Kartu game dengan efek 3D Tilt, micro-interactions, dan animasi skeleton loading.
+*   **Theming**: Dukungan Dark Mode, Light Mode, dan tema kustom lainnya.
 
 ---
-*Happy Gaming!* 🕹️
+
+## 🛠️ Teknologi yang Digunakan
+
+**Frontend (Client):**
+*   **React** (Vite)
+*   **Tailwind CSS** (Styling)
+*   **Framer Motion** (Animasi kompleks & Transisi)
+*   **Socket.io Client** (Real-time communication)
+*   **Axios** (HTTP Client)
+*   **FontAwesome** (Icons)
+
+**Backend (Server):**
+*   **Node.js & Express**
+*   **Prisma ORM** (Database Management)
+*   **SQLite** (Database - *mudah disetup tanpa install software tambahan*)
+*   **Socket.io** (WebSocket Server)
+*   **JWT** (Authentication)
+
+---
+
+## 🚀 Cara Menjalankan Project
+
+Ikuti langkah-langkah berikut untuk menjalankan GameStore di komputer lokal Anda.
+
+### Prasyarat
+Pastikan Anda sudah menginstal:
+*   [Node.js](https://nodejs.org/) (v16 atau lebih baru)
+*   Git
+
+### 1. Clone Repository
+```bash
+git clone <repository-url>
+cd GameStore
+```
+
+### 2. Setup Backend (Server)
+Buka terminal baru, lalu jalankan:
+
+```bash
+cd server
+
+# Install dependencies
+npm install
+
+# Setup Database & Seed Data (Penting!)
+npx prisma migrate dev --name init
+node prisma/seed.js
+
+# Jalankan Server
+npm run dev
+```
+*Server akan berjalan di `http://localhost:3000`*
+
+### 3. Setup Frontend (Client)
+Buka terminal **baru** (biarkan terminal server tetap berjalan), lalu jalankan:
+
+```bash
+cd client
+
+# Install dependencies
+npm install
+
+# Jalankan Client
+npm run dev
+```
+*Website akan terbuka otomatis di `http://localhost:5173`*
+
+---
+
+## 🔑 Akun Demo (Default)
+
+Database sudah terisi dengan akun-akun berikut untuk keperluan testing:
+
+| Role | Email | Password | Kegunaan |
+| :--- | :--- | :--- | :--- |
+| **Admin** | `admin@gamestore.com` | `password123` | Akses penuh ke dashboard admin & manajemen user |
+| **Publisher** | `publisher@rockstar.com` | `password123` | Demo dashboard publisher (Rockstar Games) |
+| **Publisher** | `publisher@sony.com` | `password123` | Demo dashboard publisher (PlayStation) |
+| **User** | *(Register Sendiri)* | - | Coba fitur register untuk pengalaman user baru |
+
+---
+
+## 📂 Struktur Project
+
+```
+GameStore/
+├── client/                 # Frontend React App
+│   ├── src/
+│   │   ├── components/     # Komponen UI Reusable
+│   │   ├── context/        # React Context (Theme, Auth)
+│   │   ├── App.jsx         # Main Routing & Layout
+│   │   └── ...
+│   └── ...
+├── server/                 # Backend Express App
+│   ├── prisma/             # Database Schema & Seeds
+│   ├── src/
+│   │   ├── controllers/    # Logika Bisnis
+│   │   ├── routes/         # API Routes
+│   │   ├── services/       # Service Layer
+│   │   └── ...
+│   └── uploads/            # Folder upload gambar
+└── README.md               # Dokumentasi ini
+```
+
+## ⚠️ Troubleshooting Umum
+
+*   **Error `net::ERR_ABORTED` atau Socket disconnect?**
+    *   Pastikan server backend berjalan.
+    *   Coba refresh halaman browser (hard refresh: Ctrl+F5).
+    *   Kami sudah mengoptimalkan konfigurasi socket untuk reconnect otomatis.
+
+*   **Gambar tidak muncul?**
+    *   Pastikan folder `server/uploads` ada dan server backend sedang berjalan, karena gambar disajikan sebagai file statis dari sana.
+
+*   **Database Error / Prisma Error?**
+    *   Hapus folder `server/prisma/migrations` dan file `server/prisma/dev.db`.
+    *   Jalankan ulang `npx prisma migrate dev --name init` dan `node prisma/seed.js` di folder server.
+
+---
+
+*Dibuat dengan ❤️ untuk tugas Software Engineering / Web Development.*
