@@ -199,11 +199,20 @@ const Home = ({ addToCart, user, directPurchase, library }) => {
           {/* Group 4: Big Blur Shapes (Depth) */}
           <div className={`absolute top-[45%] right-[5%] text-[150px] ${theme.name === 'Clean Light' ? 'text-black/5' : 'text-white/5'} animate-float-slow rotate-12 blur-sm`} style={{ animationDelay: '8s' }}>■</div>
           <div className={`absolute bottom-[10%] left-[30%] text-[120px] ${theme.name === 'Clean Light' ? 'text-black/5' : 'text-white/5'} animate-float-slow -rotate-12 blur-sm`} style={{ animationDelay: '9s' }}>●</div>
+
+          {/* Group 5: MORE Shapes & Movement (User Request) */}
+          <motion.div animate={{ y: [0, -40, 0], x: [0, 20, 0], rotate: [0, 45, 0] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }} className="absolute top-[15%] right-[25%] w-6 h-6 bg-pink-500/30 rounded-full blur-[1px]"></motion.div>
+          <motion.div animate={{ y: [0, 30, 0], x: [0, -20, 0], rotate: [0, -45, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} className="absolute bottom-[25%] left-[10%] w-8 h-8 border border-blue-400/30 rotate-12"></motion.div>
+          <motion.div animate={{ scale: [1, 1.5, 1], opacity: [0.2, 0.5, 0.2] }} transition={{ duration: 2, repeat: Infinity }} className="absolute top-[50%] right-[40%] w-4 h-4 bg-white/40 rounded-full shadow-[0_0_10px_rgba(255,255,255,0.5)]"></motion.div>
+          <motion.div animate={{ y: [0, -60, 0] }} transition={{ duration: 5, repeat: Infinity }} className="absolute bottom-[5%] right-[15%] text-6xl text-purple-500/20 font-mono font-bold">{'</>'}</motion.div>
+          <motion.div animate={{ x: [0, 50, 0] }} transition={{ duration: 6, repeat: Infinity }} className="absolute top-[5%] left-[50%] w-32 h-1 bg-gradient-to-r from-transparent via-white/20 to-transparent"></motion.div>
+          <motion.div animate={{ rotate: [0, 360] }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }} className="absolute top-[80%] left-[80%] w-40 h-40 border-[1px] border-dashed border-white/10 rounded-full"></motion.div>
+          
       </div>
 
       <div className="relative z-10 pb-20">
         <Hero directPurchase={directPurchase} />
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-6 md:px-12">
         {user && (user.role === 'PUBLISHER' || user.role === 'ADMIN') && <DevUpdatesFeed />}
         
         {/* Discovery Queue Banner */}
@@ -547,13 +556,38 @@ import { Support, FAQ, SystemStatus, Contact, Privacy, Terms, Cookies, Refunds }
 
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 
+import ChatSystem from './components/ChatSystem';
+
+import MobileBottomNav from './components/MobileBottomNav';
+
 const AppContent = ({ user, setUser, refreshUser }) => {
   const { theme } = useTheme();
   const location = useLocation();
   const [cart, setCart] = useState([]);
   const [library, setLibrary] = useState([]); // Array of owned game IDs
   const [notifications, setNotifications] = useState([]);
+  const [friends, setFriends] = useState([]); // Lift friends state up
   const [socket, setSocket] = useState(null);
+
+  useEffect(() => {
+    if (user) {
+        // ... existing library/wishlist fetching ...
+        const fetchFriends = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const res = await axios.get('/api/friends', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setFriends(res.data.data);
+            } catch (err) {
+                console.error('Failed to fetch friends');
+            }
+        };
+        fetchFriends();
+    }
+  }, [user]);
+
+  // ... existing socket setup ...
 
   useEffect(() => {
     const storedCart = localStorage.getItem('cart');
@@ -782,6 +816,9 @@ const AppContent = ({ user, setUser, refreshUser }) => {
             cartCount={cart.length} 
             notifications={notifications}
             setNotifications={setNotifications}
+            socket={socket}
+            friends={friends}
+            setFriends={setFriends}
           />
           <div className="flex-1">
           <AnimatePresence mode="wait">
@@ -836,6 +873,8 @@ const AppContent = ({ user, setUser, refreshUser }) => {
         </AnimatePresence>
         </div>
         <Footer />
+        {user && socket && <ChatSystem user={user} friends={friends} socket={socket} />}
+        {user && <MobileBottomNav user={user} cartCount={cart.length} notifications={notifications} />}
       </div>
     </>
   );

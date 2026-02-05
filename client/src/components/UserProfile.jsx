@@ -17,11 +17,15 @@ const UserProfile = ({ currentUser }) => {
   const [friends, setFriends] = useState([]);
   const [following, setFollowing] = useState([]);
   const [friendStatus, setFriendStatus] = useState(null); // null, 'PENDING', 'ACCEPTED'
+  const [commonGames, setCommonGames] = useState([]); // New state for mutual games
+  const [comments, setComments] = useState([]); // Profile Comments
+  const [newComment, setNewComment] = useState('');
   const [activeTab, setActiveTab] = useState('library');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchProfile();
+    fetchComments();
   }, [id]);
 
   const fetchProfile = async () => {
@@ -37,6 +41,16 @@ const UserProfile = ({ currentUser }) => {
         setFriendStatus(res.data.data.friendStatus);
         setFriends(res.data.data.friends || []);
 
+        // Fetch common games if looking at someone else's profile
+        if (currentUser && currentUser.id !== parseInt(id)) {
+            try {
+                const commonRes = await axios.get(`/api/friends/common/${id}`, { headers });
+                setCommonGames(commonRes.data.data);
+            } catch (err) {
+                console.error('Failed to fetch common games');
+            }
+        }
+
         // If it's current user's profile, fetch following
         if (currentUser && currentUser.id === parseInt(id)) {
             const followRes = await axios.get('/api/follows/my', { headers });
@@ -49,6 +63,33 @@ const UserProfile = ({ currentUser }) => {
     } finally {
         setLoading(false);
     }
+  };
+
+  const fetchComments = async () => {
+      try {
+          const res = await axios.get(`/api/users/${id}/comments`);
+          setComments(res.data.data);
+      } catch (err) {
+          console.error('Failed to fetch comments');
+      }
+  };
+
+  const handlePostComment = async (e) => {
+      e.preventDefault();
+      if (!newComment.trim()) return;
+
+      try {
+          const token = localStorage.getItem('token');
+          await axios.post(`/api/users/${id}/comments`, { content: newComment }, {
+              headers: { Authorization: `Bearer ${token}` }
+          });
+          setNewComment('');
+          fetchComments();
+          toast.success('Comment posted!');
+      } catch (err) {
+          console.error('Failed to post comment');
+          toast.error('Failed to post comment');
+      }
   };
 
   const handleAddFriend = async () => {
@@ -212,20 +253,38 @@ const UserProfile = ({ currentUser }) => {
             </div>
         </div>
 
-        {/* Content Tabs */}
-        <div className="flex gap-12 border-b border-white/5 mb-12 px-4">
-            {['library', 'friends', 'following'].map(tab => (
+                    {/* Mutual Games Section (New) */}
+                    {currentUser && currentUser.id !== parseInt(id) && commonGames.length > 0 && (
+                        <div className="mb-10 bg-blue-500/5 p-6 rounded-3xl border border-blue-500/10">
+                            <h4 className={`text-sm font-black uppercase tracking-widest ${theme.colors.accent} mb-4 flex items-center gap-2`}>
+                                <FontAwesomeIcon icon={faGamepad} /> Games in Common ({commonGames.length})
+                            </h4>
+                            <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+                                {commonGames.map(game => (
+                                    <Link to={`/games/${game.id}`} key={game.id} className="shrink-0 w-24 group">
+                                        <img src={game.coverImage || 'https://via.placeholder.com/300x400'} alt={game.title} className="w-full h-32 object-cover rounded-xl shadow-lg group-hover:scale-105 transition-transform" />
+                                        <p className="text-[10px] font-bold mt-2 truncate opacity-70 group-hover:opacity-100">{game.title}</p>
+                                    </Link>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Content Tabs */}
+                    <div className="flex gap-12 border-b border-white/5 mb-12 px-4 overflow-x-auto">
+            {['library', 'friends', 'following', 'guestbook'].map(tab => (
                 (tab !== 'following' || (currentUser && currentUser.id === parseInt(id))) && (
                     <button 
                         key={tab}
                         onClick={() => setActiveTab(tab)}
-                        className={`pb-6 text-xs font-black uppercase tracking-[0.3em] transition-all relative ${
+                        className={`pb-6 text-xs font-black uppercase tracking-[0.3em] transition-all relative shrink-0 ${
                             activeTab === tab ? theme.colors.text : 'opacity-40 hover:opacity-100'
                         }`}
                     >
                         {tab === 'library' && `Library (${library.length})`}
                         {tab === 'friends' && `Friends (${friends.length})`}
                         {tab === 'following' && `Following (${following.length})`}
+                        {tab === 'guestbook' && `Guestbook (${comments.length})`}
                         {activeTab === tab && (
                             <motion.div 
                                 layoutId="activeTab"
@@ -324,6 +383,62 @@ const UserProfile = ({ currentUser }) => {
                             </Link>
                         ))
                     )}
+                </div>
+            )}
+            {activeTab === 'guestbook' && (
+                <div className="max-w-3xl">
+                    {currentUser && (
+                        <form onSubmit={handlePostComment} className="mb-12 flex gap-6">
+                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex-shrink-0 flex items-center justify-center text-white font-black text-lg shadow-lg">
+                                {currentUser.name.charAt(0)}
+                            </div>
+                            <div className="flex-1">
+                                <div className="relative">
+                                    <textarea
+                                        className={`w-full ${theme.colors.card} ${theme.colors.text} rounded-3xl p-6 text-sm outline-none border border-white/10 focus:border-blue-500 transition-colors min-h-[120px] shadow-inner resize-none`}
+                                        placeholder={`Write something on ${user.name}'s profile...`}
+                                        value={newComment}
+                                        onChange={(e) => setNewComment(e.target.value)}
+                                    ></textarea>
+                                    <div className="absolute bottom-4 right-4">
+                                        <button type="submit" className="px-6 py-2 bg-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-wider hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20 transform hover:scale-105 active:scale-95">
+                                            Post
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    )}
+
+                    <div className="space-y-8">
+                        {comments.map(comment => (
+                            <div key={comment.id} className="flex gap-6 group">
+                                <Link to={`/profile/${comment.authorId}`} className="w-12 h-12 rounded-2xl bg-gray-800 flex-shrink-0 flex items-center justify-center text-white font-black text-lg border border-white/5 hover:border-blue-500/50 transition-all">
+                                    {comment.author.name.charAt(0)}
+                                </Link>
+                                <div className="flex-1">
+                                    <div className={`p-6 rounded-[2rem] rounded-tl-none ${theme.colors.card} border border-white/5 group-hover:border-white/10 transition-colors relative`}>
+                                        <div className="flex justify-between items-start mb-3">
+                                            <Link to={`/profile/${comment.authorId}`} className="font-black text-sm hover:text-blue-400 transition-colors">
+                                                {comment.author.name}
+                                            </Link>
+                                            <span className="text-[10px] font-black uppercase tracking-widest opacity-30">
+                                                {new Date(comment.createdAt).toLocaleDateString()}
+                                            </span>
+                                        </div>
+                                        <p className="text-sm opacity-70 leading-relaxed whitespace-pre-wrap">{comment.content}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                        {comments.length === 0 && (
+                            <div className="text-center py-20 opacity-30">
+                                <FontAwesomeIcon icon={faComments} className="text-6xl mb-6" />
+                                <h3 className="text-xl font-black uppercase tracking-widest">No messages yet</h3>
+                                <p className="text-sm mt-2">Be the first to sign the guestbook!</p>
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
         </div>

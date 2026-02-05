@@ -253,11 +253,45 @@ const searchUsers = async (req, res, next) => {
     }
 };
 
+const getCommonGames = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+        const { friendId } = req.params;
+
+        const myLibrary = await prisma.library.findMany({
+            where: { userId },
+            select: { gameId: true }
+        });
+
+        const friendLibrary = await prisma.library.findMany({
+            where: { userId: parseInt(friendId) },
+            select: { gameId: true }
+        });
+
+        const myGameIds = myLibrary.map(l => l.gameId);
+        const friendGameIds = friendLibrary.map(l => l.gameId);
+
+        const commonIds = myGameIds.filter(id => friendGameIds.includes(id));
+
+        const commonGames = await prisma.game.findMany({
+            where: { id: { in: commonIds } }
+        });
+
+        res.status(200).json({
+            success: true,
+            data: commonGames
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     sendFriendRequest,
     acceptFriendRequest,
     getFriends,
     getPendingRequests,
     removeFriend,
-    searchUsers
+    searchUsers,
+    getCommonGames
 };

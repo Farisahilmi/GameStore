@@ -258,6 +258,57 @@ const heartbeat = async (req, res, next) => {
     }
 };
 
+const addProfileComment = async (req, res, next) => {
+    try {
+        const { id } = req.params; // Profile Owner ID
+        const { content } = req.body;
+        const authorId = req.user.id;
+
+        const comment = await prisma.profileComment.create({
+            data: {
+                profileId: parseInt(id),
+                authorId,
+                content
+            },
+            include: {
+                author: { select: { id: true, name: true, role: true } }
+            }
+        });
+
+        // Notify profile owner
+        if (parseInt(id) !== authorId) {
+            // Reuse notification service if available, or create directly
+            await prisma.notification.create({
+                data: {
+                    userId: parseInt(id),
+                    type: 'COMMENT',
+                    message: `${req.user.name} commented on your profile: "${content.substring(0, 30)}${content.length > 30 ? '...' : ''}"`
+                }
+            });
+        }
+
+        res.status(201).json({ success: true, data: comment });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const getProfileComments = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const comments = await prisma.profileComment.findMany({
+            where: { profileId: parseInt(id) },
+            include: {
+                author: { select: { id: true, name: true, role: true } }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+        res.status(200).json({ success: true, data: comments });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
   upgradeToPublisher,
   getProfile,
@@ -268,5 +319,7 @@ module.exports = {
   updateTheme,
   updateProfile,
   updateStatus,
-  heartbeat
+  heartbeat,
+  addProfileComment,
+  getProfileComments
 };

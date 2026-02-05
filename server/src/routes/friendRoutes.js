@@ -8,6 +8,7 @@ router.use(authenticate);
 router.get('/', friendController.getFriends);
 router.get('/pending', friendController.getPendingRequests);
 router.get('/search', friendController.searchUsers);
+router.get('/common/:friendId', friendController.getCommonGames);
 router.post('/request', friendController.sendFriendRequest);
 router.put('/request/:requestId/accept', friendController.acceptFriendRequest);
 router.delete('/:friendId', friendController.removeFriend);

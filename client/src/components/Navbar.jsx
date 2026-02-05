@@ -3,16 +3,17 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faShoppingCart, faSearch, faBell, faHeart, faExchangeAlt, faWallet, faGamepad, faCog, faRocket } from '@fortawesome/free-solid-svg-icons';
+import { faShoppingCart, faSearch, faBell, faHeart, faExchangeAlt, faWallet, faGamepad, faCog, faRocket, faBars, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'react-hot-toast';
 import { useTheme } from '../context/ThemeContext';
 
-const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications }) => {
+const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications, socket, friends, setFriends }) => {
   const navigate = useNavigate();
   const { theme, currentTheme } = useTheme();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isSwitchModalOpen, setIsSwitchModalOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [savedAccounts, setSavedAccounts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [gameSearchResults, setGameSearchResults] = useState([]);
@@ -21,7 +22,9 @@ const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications 
   const [pendingRequests, setPendingRequests] = useState([]);
   const [wishlistCount, setWishlistCount] = useState(0);
   const [scrolled, setScrolled] = useState(false);
-  const [friends, setFriends] = useState([]);
+  const [isChatDropdownOpen, setIsChatDropdownOpen] = useState(false); // Removed duplicate friend state logic
+
+  // ... (inside Navbar return) ...
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -109,17 +112,7 @@ const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications 
             }
         };
 
-        const fetchFriends = async () => {
-            try {
-                const token = localStorage.getItem('token');
-                const res = await axios.get('/api/friends', {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                setFriends(res.data.data);
-            } catch (err) {
-                console.error('Failed to fetch friends');
-            }
-        };
+        // fetchFriends moved to App.jsx to share state with ChatSystem
 
         const fetchPendingFriends = async () => {
             try {
@@ -135,7 +128,7 @@ const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications 
 
         fetchWishlist();
         fetchPendingFriends();
-        fetchFriends();
+        // fetchFriends(); // Called in App.jsx
 
         // Listen for updates
         const handleWishlistUpdate = () => {
@@ -149,6 +142,23 @@ const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications 
         };
     }
   }, [user]);
+
+  // Listen for friend status updates
+  useEffect(() => {
+    if (socket) {
+      const handleFriendStatus = ({ userId, status }) => {
+        setFriends(prev => prev.map(f => 
+          f.id === userId ? { ...f, status } : f
+        ));
+      };
+
+      socket.on('friend_status', handleFriendStatus);
+
+      return () => {
+        socket.off('friend_status', handleFriendStatus);
+      };
+    }
+  }, [socket]);
 
   const safeNotifications = Array.isArray(notifications) ? notifications : [];
   const unreadCount = safeNotifications.filter(n => !n.isRead).length;
@@ -237,7 +247,7 @@ const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications 
   };
 
   return (
-    <nav className={`sticky top-0 z-50 transition-all duration-500 py-3 ${
+    <nav className={`sticky top-0 z-50 transition-all duration-500 py-3 block ${
         scrolled 
         ? `${theme.colors.glass} ${theme.colors.shadow} py-2` 
         : 'bg-transparent'
@@ -262,7 +272,7 @@ const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications 
                     onMouseEnter={() => setIsMegaMenuOpen(true)}
                     onMouseLeave={() => setIsMegaMenuOpen(false)}
                 >
-                    <Link to="/" className={`text-[10px] font-black opacity-60 hover:opacity-100 ${theme.colors.text} transition-all uppercase tracking-[0.25em] relative py-4 block`}>
+                    <Link to="/" onClick={() => setIsMegaMenuOpen(false)} className={`text-[10px] font-black opacity-60 hover:opacity-100 ${theme.colors.text} transition-all uppercase tracking-[0.25em] relative py-4 block`}>
                         Store
                         <span className="absolute bottom-2 left-0 w-0 h-0.5 bg-current transition-all duration-300 group-hover:w-full opacity-50"></span>
                     </Link>
@@ -334,16 +344,16 @@ const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications 
 
         {/* Main Search */}
         <div className="flex-1 mx-8 max-w-lg hidden lg:flex items-center gap-4">
-            <div className="relative flex-1">
+            <div className="relative flex-1 group">
                 <form onSubmit={handleSearch} className="relative">
                     <input 
                         type="text" 
                         placeholder="Search titles..." 
-                        className={`w-full ${theme.colors.input} ${theme.colors.text} pl-11 pr-4 py-2.5 rounded-2xl border ${theme.colors.border} focus:ring-4 ${theme.colors.ring} outline-none transition-all text-xs font-medium`}
+                        className={`w-full ${theme.colors.input} ${theme.colors.text} pl-11 pr-4 py-2.5 rounded-2xl border ${theme.colors.border} focus:ring-4 ${theme.colors.ring} outline-none transition-all text-xs font-medium group-hover:border-blue-500/50`}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
-                    <FontAwesomeIcon icon={faSearch} className="absolute left-4 top-1/2 -translate-y-1/2 opacity-30 text-xs" />
+                    <FontAwesomeIcon icon={faSearch} className="absolute left-4 top-1/2 -translate-y-1/2 opacity-30 text-xs group-hover:text-blue-500 transition-colors" />
                 </form>
                 {gameSearchResults.length > 0 && (
                     <div className={`absolute top-full left-0 w-full ${theme.colors.card} border ${theme.colors.border} rounded-2xl ${theme.colors.shadow} mt-2 z-50 overflow-hidden animate-slideUp`}>

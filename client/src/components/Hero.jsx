@@ -82,30 +82,41 @@ const Hero = ({ directPurchase }) => {
     }
   ];
 
-  // Fetch games for slides
   useEffect(() => {
-    const fetchFeaturedGames = async () => {
+    fetchFeaturedGames();
+
+    // Random rotation interval (1 minute)
+    const rotationInterval = setInterval(() => {
+        fetchFeaturedGames();
+    }, 60000); 
+
+    return () => clearInterval(rotationInterval);
+  }, []);
+
+  // Fetch games for slides
+  const fetchFeaturedGames = async () => {
         try {
-            // Fetch random games or top rated
-            const res = await axios.get('/api/games?limit=5');
-            const games = res.data?.data?.games || [];
+            // Fetch random games from a random page (1-10) to ensure variety
+            const randomPage = Math.floor(Math.random() * 10) + 1;
+            const res = await axios.get(`/api/games?limit=5&page=${randomPage}`);
+            let games = res.data?.data?.games || [];
             
             if (games.length > 0) {
-                // Shuffle array to get random games on refresh
+                // Shuffle array to get truly random selection from the fetched batch
                 const shuffled = games.sort(() => 0.5 - Math.random());
+                
                 setSlides(shuffled.slice(0, 5));
+                setCurrentSlide(0); 
             } else {
                 setSlides(defaultSlides);
             }
         } catch (err) {
             console.error("Failed to fetch hero games", err);
-            setSlides(defaultSlides);
+            if (slides.length === 0) setSlides(defaultSlides);
         } finally {
             setLoading(false);
         }
     };
-    fetchFeaturedGames();
-  }, []);
 
   // Slideshow Effect
   useEffect(() => {
@@ -172,10 +183,15 @@ const Hero = ({ directPurchase }) => {
                     <source src={slide.videoUrl} type="video/mp4" />
                 </video>
             ) : (
-                <div 
-                    className="absolute inset-0 bg-cover bg-center scale-110"
-                    style={{ backgroundImage: `url('${slide.imageUrl}')` }}
-                ></div>
+                <img 
+                    src={slide.imageUrl} 
+                    alt={slide.title}
+                    className="absolute inset-0 w-full h-full object-cover scale-110"
+                    onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = 'https://placehold.co/1920x1080/1a1a1a/ffffff?text=No+Image';
+                    }}
+                />
             )}
         </motion.div>
       ))}
@@ -211,10 +227,12 @@ const Hero = ({ directPurchase }) => {
             key={currentGame.title}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`text-6xl md:text-8xl lg:text-9xl font-black ${theme.name === 'Clean Light' ? 'text-black' : 'text-white'} mb-8 drop-shadow-2xl leading-[0.9] max-w-4xl tracking-tighter`}
+            className={`text-4xl md:text-6xl lg:text-7xl font-black ${theme.name === 'Clean Light' ? 'text-black' : 'text-white'} mb-8 drop-shadow-2xl leading-[0.9] max-w-4xl tracking-tighter min-h-[1.8em] flex items-center`}
         >
+          <span>
           {displayText}
-          <span className={`animate-pulse border-r-[12px] ${theme.colors.accent.replace('text-', 'border-')} ml-3`}></span>
+          <span className={`animate-pulse border-r-[8px] md:border-r-[12px] ${theme.colors.accent.replace('text-', 'border-')} ml-3`}></span>
+          </span>
         </motion.h1>
 
         <motion.p 

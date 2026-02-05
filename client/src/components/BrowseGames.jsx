@@ -68,7 +68,7 @@ const BrowseGames = ({ addToCart, library }) => {
         if (minPrice) params.append('minPrice', minPrice);
         if (maxPrice) params.append('maxPrice', maxPrice);
         params.append('page', currentPage);
-        params.append('limit', 15);
+        params.append('limit', 12);
 
         const res = await axios.get(`/api/games?${params.toString()}`);
         setGames(res.data?.data?.games || []);

@@ -8,6 +8,27 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Message {
+  id         Int      @id @default(autoincrement())
+  senderId   Int
+  receiverId Int
+  content    String
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  receiver   User     @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  sender     User     @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+}
+
+model ProfileComment {
+  id        Int      @id @default(autoincrement())
+  profileId Int      // The user whose profile is being commented on
+  authorId  Int      // The user who wrote the comment
+  content   String
+  createdAt DateTime @default(now())
+  profile   User     @relation("ProfileOwner", fields: [profileId], references: [id], onDelete: Cascade)
+  author    User     @relation("CommentAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+}
+
 model User {
   id             Int                 @id @default(autoincrement())
   email          String              @unique
@@ -30,6 +51,8 @@ model User {
   following      Follow[]            @relation("UserFollowing")
   friendOf       Friend[]            @relation("UserFriendOf")
   friends        Friend[]            @relation("UserFriends")
+  sentMessages   Message[]           @relation("MessageSender")
+  receivedMessages Message[]         @relation("MessageReceiver")
   publishedGames Game[]              @relation("PublisherGames")
   library        Library[]
   notifications  Notification[]
@@ -38,9 +61,12 @@ model User {
   giftsReceived  Transaction[]       @relation("GiftRecipient")
   transactions   Transaction[]
   wishlist       Wishlist[]
+  cart           Cart[]
   voucherUsages  VoucherUsage[]
   forumPosts     ForumPost[]
   forumComments  ForumComment[]
+  profileCommentsReceived ProfileComment[] @relation("ProfileOwner")
+  profileCommentsWritten  ProfileComment[] @relation("CommentAuthor")
 }
 
 model ForumPost {
@@ -92,7 +118,8 @@ model Game {
   reviews         Review[]
   inWishlists     Wishlist[]
   categories      Category[]    @relation("CategoryToGame")
-  transactions    Transaction[] @relation("GameToTransaction")
+  cartItems       Cart[]
+  transactionItems TransactionItem[]
   screenshots     GameImage[]
   forumPosts      ForumPost[]
 }
@@ -134,17 +161,27 @@ model Category {
   games Game[] @relation("CategoryToGame")
 }
 
+model TransactionItem {
+  id            Int         @id @default(autoincrement())
+  transactionId Int
+  gameId        Int
+  price         Decimal
+  createdAt     DateTime    @default(now())
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  game          Game        @relation(fields: [gameId], references: [id], onDelete: Cascade)
+}
+
 model Transaction {
-  id          Int      @id @default(autoincrement())
+  id          Int               @id @default(autoincrement())
   userId      Int
   recipientId Int?
   total       Decimal
-  status      String   @default("PENDING")
-  type        String   @default("PURCHASE")
-  createdAt   DateTime @default(now())
-  recipient   User?    @relation("GiftRecipient", fields: [recipientId], references: [id], onDelete: SetNull)
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  games       Game[]   @relation("GameToTransaction")
+  status      String            @default("PENDING")
+  type        String            @default("PURCHASE")
+  createdAt   DateTime          @default(now())
+  recipient   User?             @relation("GiftRecipient", fields: [recipientId], references: [id], onDelete: SetNull)
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items       TransactionItem[]
 }
 
 model Library {
@@ -159,6 +196,17 @@ model Library {
 }
 
 model Wishlist {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  gameId    Int
+  createdAt DateTime @default(now())
+  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, gameId])
+}
+
+model Cart {
   id        Int      @id @default(autoincrement())
   userId    Int
   gameId    Int

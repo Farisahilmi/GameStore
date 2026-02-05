@@ -37,7 +37,7 @@ const GameDetails = ({ addToCart, directPurchase, library }) => {
   // Helper for accent background
   const accentBg = 'bg-blue-600';
   
-  const PLACEHOLDER_IMG = 'placeholder.jpg';
+  const PLACEHOLDER_IMG = 'https://placehold.co/1920x1080/1a1a1a/ffffff?text=No+Image';
 
   const currentUser = JSON.parse(localStorage.getItem('user'));
 
