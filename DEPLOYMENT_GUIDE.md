@@ -65,6 +65,8 @@ Sebelum upload, kita harus menyesuaikan kode agar bisa pakai PostgreSQL.
 5.  Scroll ke bawah ke bagian **Environment Variables**, tambahkan:
     *   `DATABASE_URL`: *(Isi dengan Connection String dari Neon tadi)*
     *   `JWT_SECRET`: *(Isi dengan kode rahasia acak yang panjang)*
+    *   `API_KEY`: `30035be176e0448bb45ce782377409ce` *(Atau ganti dengan key pilihan Anda)*
+    *   `FRONTEND_URL`: *(Isi dengan URL Frontend Vercel nanti, misal https://gamestore.vercel.app - bisa diupdate belakangan)*
     *   `NODE_ENV`: `production`
 6.  Klik **Create Web Service**.
 7.  Tunggu proses deploy selesai. Render akan memberikan URL Backend, misal: `https://gamestore-api.onrender.com`. **Salin URL ini.**
@@ -89,6 +91,7 @@ Sebelum upload, kita harus menyesuaikan kode agar bisa pakai PostgreSQL.
 5.  Buka bagian **Environment Variables**, tambahkan:
     *   `VITE_API_URL`: *(Isi dengan URL Backend Render tadi, tanpa garis miring di akhir)*
         *   Contoh: `https://gamestore-api.onrender.com`
+    *   `VITE_API_KEY`: `30035be176e0448bb45ce782377409ce` *(Harus sama dengan API_KEY di Backend)*
 6.  Klik **Deploy**.
 
 ---

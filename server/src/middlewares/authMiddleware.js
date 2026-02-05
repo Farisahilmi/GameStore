@@ -29,6 +29,9 @@ const authenticate = async (req, res, next) => {
     if (error.name === 'JsonWebTokenError') {
       error.statusCode = 401;
       error.message = 'Invalid token';
+    } else if (error.name === 'TokenExpiredError') {
+      error.statusCode = 401;
+      error.message = 'Token expired';
     }
     next(error);
   }
