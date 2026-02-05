@@ -62,18 +62,21 @@ const Hero = ({ directPurchase }) => {
     {
       id: 'default1',
       imageUrl: "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop",
+      videoUrl: "https://cdn.pixabay.com/video/2023/10/15/185090-874636683_large.mp4", // Cyberpunk city vibe
       title: "Your Next Adventure Starts Here",
       price: 0
     },
     {
       id: 'default2',
       imageUrl: "https://images.unsplash.com/photo-1552820728-8b83bb6b773f?q=80&w=2070&auto=format&fit=crop",
+      videoUrl: "https://cdn.pixabay.com/video/2021/08/04/83896-583206060_large.mp4", // Space/Sci-fi vibe
       title: "Discover Indie Gems & Classics",
       price: 0
     },
     {
         id: 'default3',
         imageUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=2071&auto=format&fit=crop",
+        videoUrl: "https://cdn.pixabay.com/video/2020/05/25/40139-424075573_large.mp4", // Gaming setup/Action vibe
         title: "Join The Ultimate Gaming Hub",
         price: 0
     }
@@ -150,15 +153,31 @@ const Hero = ({ directPurchase }) => {
       {slides.map((slide, index) => (
         <motion.div 
             key={slide.id}
-            initial={{ opacity: 0, scale: 1.1 }}
+            initial={{ opacity: 0 }}
             animate={{ 
                 opacity: index === currentSlide ? 1 : 0,
-                scale: index === currentSlide ? 1 : 1.1,
             }}
             transition={{ duration: 1.5, ease: "easeOut" }}
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url('${slide.imageUrl}')` }}
-        ></motion.div>
+            className="absolute inset-0 w-full h-full"
+        >
+            {/* Video Background if available */}
+            {slide.videoUrl && index === currentSlide ? (
+                <video 
+                    autoPlay 
+                    muted 
+                    loop 
+                    playsInline
+                    className="absolute inset-0 w-full h-full object-cover scale-110"
+                >
+                    <source src={slide.videoUrl} type="video/mp4" />
+                </video>
+            ) : (
+                <div 
+                    className="absolute inset-0 bg-cover bg-center scale-110"
+                    style={{ backgroundImage: `url('${slide.imageUrl}')` }}
+                ></div>
+            )}
+        </motion.div>
       ))}
 
       {/* Dynamic Overlay Gradient based on theme */}

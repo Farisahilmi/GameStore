@@ -435,12 +435,29 @@ const GameDetails = ({ addToCart, directPurchase, library }) => {
                           setIsAddingWishlist(false);
                       }
                     }}
-                  className="w-full bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 border border-blue-500/50 font-bold py-2 rounded text-sm transition disabled:opacity-50 flex items-center justify-center"
+                  className="w-full bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 border border-blue-500/50 font-bold py-2 rounded text-sm transition disabled:opacity-50 flex items-center justify-center relative overflow-hidden group"
                 >
                   {isAddingWishlist ? (
                       <div className="w-4 h-4 border-2 border-blue-300 border-t-transparent rounded-full animate-spin"></div>
                   ) : (
-                      <><FontAwesomeIcon icon={faHeart} className="mr-2" /> Add to Wishlist</>
+                      <>
+                        <motion.span 
+                            initial={{ scale: 1 }}
+                            whileTap={{ scale: 1.5, color: '#f87171' }} // Red color on tap
+                            transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                            className="mr-2"
+                        >
+                            <FontAwesomeIcon icon={faHeart} />
+                        </motion.span>
+                        Add to Wishlist
+                        <motion.div 
+                            initial={{ scale: 0, opacity: 0 }}
+                            whileTap={{ scale: 20, opacity: 0.1 }}
+                            transition={{ duration: 0.5 }}
+                            className="absolute inset-0 bg-red-500 rounded-full pointer-events-none"
+                            style={{ originX: 0.5, originY: 0.5 }}
+                        />
+                      </>
                   )}
                 </button>
               </div>

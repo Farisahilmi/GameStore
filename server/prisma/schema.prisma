@@ -12,7 +12,7 @@ model User {
   email          String              @unique
   password       String
   name           String?
-  bio            String?
+  bio            String? // @db.Text not needed, standard string is fine for short bio
   role           String              @default("USER")
   theme          String              @default("default")
   status         String              @default("OFFLINE") // OFFLINE, ONLINE, AWAY, PLAYING
@@ -47,7 +47,7 @@ model ForumPost {
   userId    Int
   gameId    Int?           // Optional: link to a specific game community
   title     String
-  content   String
+  content   String // @db.Text is implied in SQLite but good practice to be explicit for Postgres if we switch
   type      String         @default("DISCUSSION") // DISCUSSION, GUIDE, NEWS
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
@@ -70,7 +70,7 @@ model ForumComment {
 model Game {
   id              Int           @id @default(autoincrement())
   title           String
-  description     String
+  description     String // Should be Text in Postgres? For now let's keep String as Prisma default text is generous in SQLite.
   price           Decimal       @default(0)
   discount        Int           @default(0)
   imageUrl        String?

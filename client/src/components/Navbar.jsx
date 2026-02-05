@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faShoppingCart, faSearch, faBell, faHeart, faExchangeAlt, faWallet, faGamepad, faCog, faRocket } from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'react-hot-toast';
@@ -71,6 +71,29 @@ const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications 
 
       return () => clearTimeout(delayDebounceFn);
   }, [userSearchTerm]);
+
+  const [cartPreviewOpen, setCartPreviewOpen] = useState(false);
+  const [cartPreviewItems, setCartPreviewItems] = useState([]);
+  const [cartTotal, setCartTotal] = useState(0);
+  const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (user && cartPreviewOpen) {
+        const fetchCart = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const res = await axios.get('/api/transactions/cart', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setCartPreviewItems(res.data.data.games || []);
+                setCartTotal(res.data.data.total || 0);
+            } catch (err) {
+                console.error('Failed to fetch cart preview');
+            }
+        };
+        fetchCart();
+    }
+  }, [user, cartPreviewOpen, cartCount]);
 
   useEffect(() => {
     if (user) {
@@ -234,17 +257,77 @@ const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications 
 
             {/* Navigation Links */}
             <div className="hidden lg:flex items-center gap-8">
-                <Link to="/" className={`text-[10px] font-black opacity-60 hover:opacity-100 ${theme.colors.text} transition-all uppercase tracking-[0.25em] relative group`}>
-                    Store
-                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-current transition-all duration-300 group-hover:w-full opacity-50"></span>
-                </Link>
-                <Link to="/news" className={`text-[10px] font-black opacity-60 hover:opacity-100 ${theme.colors.text} transition-all uppercase tracking-[0.25em] relative group`}>
+                <div 
+                    className="relative group"
+                    onMouseEnter={() => setIsMegaMenuOpen(true)}
+                    onMouseLeave={() => setIsMegaMenuOpen(false)}
+                >
+                    <Link to="/" className={`text-[10px] font-black opacity-60 hover:opacity-100 ${theme.colors.text} transition-all uppercase tracking-[0.25em] relative py-4 block`}>
+                        Store
+                        <span className="absolute bottom-2 left-0 w-0 h-0.5 bg-current transition-all duration-300 group-hover:w-full opacity-50"></span>
+                    </Link>
+
+                    {/* Mega Menu */}
+                    <AnimatePresence>
+                    {isMegaMenuOpen && (
+                        <motion.div 
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 10 }}
+                            className={`absolute top-full left-0 w-[600px] ${theme.colors.card} border ${theme.colors.border} rounded-2xl ${theme.colors.shadow} z-50 overflow-hidden flex`}
+                        >
+                            {/* Categories Column */}
+                            <div className="w-1/3 border-r border-white/5 bg-black/10 p-4">
+                                <h4 className="text-[10px] font-black uppercase tracking-widest opacity-40 mb-3">Categories</h4>
+                                <div className="space-y-1">
+                                    {['Action', 'Adventure', 'RPG', 'Strategy', 'Sports', 'Simulation'].map(cat => (
+                                        <Link key={cat} to={`/browse?category=${cat}`} className={`block px-3 py-2 text-xs font-bold rounded-lg hover:bg-white/5 ${theme.colors.text} transition`}>
+                                            {cat}
+                                        </Link>
+                                    ))}
+                                    <Link to="/browse" className="block px-3 py-2 text-[10px] font-black uppercase tracking-widest text-blue-500 hover:bg-blue-500/10 rounded-lg transition mt-2">
+                                        View All
+                                    </Link>
+                                </div>
+                            </div>
+
+                            {/* Featured & New Column */}
+                            <div className="flex-1 p-5">
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div>
+                                        <h4 className="text-[10px] font-black uppercase tracking-widest opacity-40 mb-3">Discover</h4>
+                                        <div className="space-y-2">
+                                            <Link to="/browse?sort=newest" className="block text-xs font-bold hover:text-blue-400 transition">New Releases</Link>
+                                            <Link to="/browse?sort=popular" className="block text-xs font-bold hover:text-blue-400 transition">Top Sellers</Link>
+                                            <Link to="/sales" className="block text-xs font-bold hover:text-blue-400 transition">On Sale</Link>
+                                            <Link to="/discovery" className="block text-xs font-bold hover:text-blue-400 transition">Discovery Queue</Link>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h4 className="text-[10px] font-black uppercase tracking-widest opacity-40 mb-3">Featured</h4>
+                                        <Link to="/sales" className="block relative aspect-video rounded-lg overflow-hidden group">
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10"></div>
+                                            <div className="absolute bottom-2 left-2 z-20">
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-white">Summer Sale</span>
+                                                <p className="text-xs text-white/80">Up to 80% off</p>
+                                            </div>
+                                            <div className="w-full h-full bg-blue-600 group-hover:scale-110 transition duration-700"></div>
+                                        </Link>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                    </AnimatePresence>
+                </div>
+
+                <Link to="/news" className={`text-[10px] font-black opacity-60 hover:opacity-100 ${theme.colors.text} transition-all uppercase tracking-[0.25em] relative group py-4 block`}>
                     News
-                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-current transition-all duration-300 group-hover:w-full opacity-50"></span>
+                    <span className="absolute bottom-2 left-0 w-0 h-0.5 bg-current transition-all duration-300 group-hover:w-full opacity-50"></span>
                 </Link>
-                <Link to="/community" className={`text-[10px] font-black opacity-60 hover:opacity-100 ${theme.colors.text} transition-all uppercase tracking-[0.25em] relative group`}>
+                <Link to="/community" className={`text-[10px] font-black opacity-60 hover:opacity-100 ${theme.colors.text} transition-all uppercase tracking-[0.25em] relative group py-4 block`}>
                     Community
-                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-current transition-all duration-300 group-hover:w-full opacity-50"></span>
+                    <span className="absolute bottom-2 left-0 w-0 h-0.5 bg-current transition-all duration-300 group-hover:w-full opacity-50"></span>
                 </Link>
             </div>
         </div>
@@ -414,14 +497,65 @@ const Navbar = ({ user, logout, cartCount, notifications = [], setNotifications 
                         )}
                     </div>
 
-                    <Link to="/cart" className={`relative opacity-70 hover:opacity-100 ${theme.colors.text} hover:text-green-400 transition group flex items-center justify-center w-8 h-8`}>
-                        <span className="text-lg"><FontAwesomeIcon icon={faShoppingCart} /></span> 
-                        {cartCount > 0 && (
-                            <span className={`absolute -top-1 -right-1 bg-green-500 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full border ${theme.colors.card}`}>
-                                {cartCount}
-                            </span>
+                    <div 
+                        className="relative"
+                        onMouseEnter={() => setCartPreviewOpen(true)}
+                        onMouseLeave={() => setCartPreviewOpen(false)}
+                    >
+                        <Link to="/cart" className={`relative opacity-70 hover:opacity-100 ${theme.colors.text} hover:text-green-400 transition group flex items-center justify-center w-8 h-8`}>
+                            <span className="text-lg"><FontAwesomeIcon icon={faShoppingCart} /></span> 
+                            {cartCount > 0 && (
+                                <span className={`absolute -top-1 -right-1 bg-green-500 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full border ${theme.colors.card}`}>
+                                    {cartCount}
+                                </span>
+                            )}
+                        </Link>
+                        
+                        {cartPreviewOpen && (
+                            <div className={`absolute top-full right-0 mt-2 w-80 ${theme.colors.card} border ${theme.colors.border} rounded-2xl ${theme.colors.shadow} z-50 overflow-hidden animate-slideUp`}>
+                                <div className="p-4 border-b border-white/5 bg-green-500/5 flex justify-between items-center">
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-green-400">Your Cart</span>
+                                    <span className="text-xs font-bold">{cartCount} items</span>
+                                </div>
+                                <div className="max-h-60 overflow-y-auto">
+                                    {cartPreviewItems.length === 0 ? (
+                                        <div className="p-8 text-center opacity-40">
+                                            <FontAwesomeIcon icon={faShoppingCart} className="text-2xl mb-2" />
+                                            <p className="text-xs font-bold">Your cart is empty</p>
+                                        </div>
+                                    ) : (
+                                        cartPreviewItems.slice(0, 3).map(game => (
+                                            <div key={game.id} className="flex gap-3 p-3 border-b border-white/5 hover:bg-white/5 transition">
+                                                <img src={game.imageUrl} alt={game.title} className="w-10 h-14 object-cover rounded" />
+                                                <div className="flex flex-col justify-center min-w-0">
+                                                    <span className="text-xs font-bold truncate">{game.title}</span>
+                                                    <span className="text-[10px] text-green-400 font-black">${Number(game.price).toFixed(2)}</span>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                    {cartPreviewItems.length > 3 && (
+                                        <div className="p-2 text-center text-[9px] opacity-40 font-black uppercase tracking-widest">
+                                            And {cartPreviewItems.length - 3} more items...
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="p-3 bg-black/20 border-t border-white/5">
+                                    <div className="flex justify-between items-center mb-3">
+                                        <span className="text-xs opacity-60">Total</span>
+                                        <span className="text-sm font-black text-green-400">${Number(cartTotal).toFixed(2)}</span>
+                                    </div>
+                                    <Link 
+                                        to="/cart" 
+                                        onClick={() => setCartPreviewOpen(false)}
+                                        className="block w-full bg-green-600 hover:bg-green-500 text-white text-center py-2 rounded-xl text-xs font-black uppercase tracking-widest transition"
+                                    >
+                                        Checkout
+                                    </Link>
+                                </div>
+                            </div>
                         )}
-                    </Link>
+                    </div>
 
                     {/* Profile Dropdown */}
                     <div className="relative ml-2">
