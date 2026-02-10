@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCartPlus, faBolt, faStar, faGamepad } from '@fortawesome/free-solid-svg-icons';
+import { faCartPlus, faBolt, faStar, faGamepad, faCheck } from '@fortawesome/free-solid-svg-icons';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 
 const GameCard = ({ game, onBuy, onBuyNow, isOwned }) => {
   const { theme } = useTheme();
+  const [showVideo, setShowVideo] = useState(false);
+  const [isAdded, setIsAdded] = useState(false);
+  const videoTimeoutRef = useRef(null);
   
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -21,9 +24,26 @@ const GameCard = ({ game, onBuy, onBuyNow, isOwned }) => {
       y.set(event.clientY - centerY);
   }
 
+  function handleMouseEnter() {
+      videoTimeoutRef.current = setTimeout(() => {
+          if (game.videoUrl) setShowVideo(true);
+      }, 800);
+  }
+
   function handleMouseLeave() {
       x.set(0);
       y.set(0);
+      setShowVideo(false);
+      if (videoTimeoutRef.current) clearTimeout(videoTimeoutRef.current);
+  }
+
+  function handleAddToCart(e) {
+      e.stopPropagation(); // Prevent card click
+      if (onBuy) {
+        onBuy(game);
+        setIsAdded(true);
+        setTimeout(() => setIsAdded(false), 2000);
+      }
   }
 
   if (!game) return null; // Defensive check
@@ -33,6 +53,7 @@ const GameCard = ({ game, onBuy, onBuyNow, isOwned }) => {
     <div style={{ perspective: 1000 }} className="h-full">
     <motion.div 
         onMouseMove={handleMouse}
+        onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         style={{ rotateX, rotateY }}
         whileHover={{ y: -12, scale: 1.03 }}
@@ -40,11 +61,23 @@ const GameCard = ({ game, onBuy, onBuyNow, isOwned }) => {
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
         className={`${theme.colors.card} rounded-[2.5rem] overflow-hidden ${theme.colors.shadow} border ${theme.colors.border} hover:border-blue-500/50 transition-all duration-500 group h-full flex flex-col relative`}
     >
-      <div className="relative h-52 sm:h-60 overflow-hidden border-b border-white/5">
+      <div className="relative h-40 sm:h-60 overflow-hidden border-b border-white/5 bg-black">
+        {showVideo && game.videoUrl ? (
+             <motion.video
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                src={game.videoUrl}
+                autoPlay
+                muted
+                loop
+                className="w-full h-full object-cover absolute inset-0 z-10"
+            />
+        ) : null}
+
         <img 
             src={imageUrl || 'https://placehold.co/600x400/1a1a1a/ffffff?text=No+Image'} 
             alt={title} 
-            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
+            className={`w-full h-full object-cover transition-transform duration-1000 ${showVideo ? 'opacity-0' : 'opacity-100 group-hover:scale-110'}`}
             onError={(e) => e.target.src = 'https://placehold.co/600x400/1a1a1a/ffffff?text=No+Image'}
         />
         
@@ -52,28 +85,28 @@ const GameCard = ({ game, onBuy, onBuyNow, isOwned }) => {
         <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out"></div>
 
         {/* Floating Badges */}
-        <div className="absolute top-5 left-5 flex flex-col gap-2">
+        <div className="absolute top-3 left-3 md:top-5 md:left-5 flex flex-col gap-2">
             {discountTotal > 0 && (
-                <div className="bg-red-600 text-white text-[10px] font-black px-3 py-1.5 rounded-xl shadow-2xl animate-bounce">
+                <div className="bg-red-600 text-white text-[9px] md:text-[10px] font-black px-2 py-1 md:px-3 md:py-1.5 rounded-lg md:rounded-xl shadow-2xl animate-bounce">
                     -{discountTotal}%
                 </div>
             )}
             {activeSaleName && (
-                <div className="bg-blue-600 backdrop-blur-md text-white text-[9px] font-black px-3 py-1.5 rounded-xl border border-white/20 shadow-2xl">
+                <div className="bg-blue-600 backdrop-blur-md text-white text-[8px] md:text-[9px] font-black px-2 py-1 md:px-3 md:py-1.5 rounded-lg md:rounded-xl border border-white/20 shadow-2xl">
                     {activeSaleName}
                 </div>
             )}
         </div>
 
         {avgRating > 0 && (
-            <div className="absolute top-5 right-5 bg-black/40 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-white/10 flex items-center gap-2 text-yellow-400 text-[10px] font-black">
-                <FontAwesomeIcon icon={faStar} className="text-[10px]" />
+            <div className="absolute top-3 right-3 md:top-5 md:right-5 bg-black/40 backdrop-blur-md px-2 py-1 md:px-2.5 md:py-1.5 rounded-lg md:rounded-xl border border-white/10 flex items-center gap-2 text-yellow-400 text-[9px] md:text-[10px] font-black">
+                <FontAwesomeIcon icon={faStar} className="text-[9px] md:text-[10px]" />
                 <span>{avgRating.toFixed(1)}</span>
             </div>
         )}
         
         {/* Overlay info on hover */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end p-8">
+        <div className="hidden md:flex absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 items-end p-8">
             <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
                 <p className="text-white text-[12px] line-clamp-3 leading-relaxed opacity-90 font-medium italic">
                     {game.description || "Click to see more details about this amazing game."}
@@ -82,41 +115,41 @@ const GameCard = ({ game, onBuy, onBuyNow, isOwned }) => {
         </div>
       </div>
       
-      <div className="p-8 flex flex-col flex-grow">
-        <h3 className={`text-2xl font-black ${theme.colors.text} mb-4 group-hover:text-blue-400 transition-colors truncate tracking-tighter`}>{title}</h3>
+      <div className="p-4 md:p-8 flex flex-col flex-grow">
+        <h3 className={`text-lg md:text-2xl font-black ${theme.colors.text} mb-2 md:mb-4 group-hover:text-blue-400 transition-colors truncate tracking-tighter`}>{title}</h3>
 
         {categories && categories.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-8">
+            <div className="flex flex-wrap gap-1 md:gap-2 mb-4 md:mb-8">
                 {categories.slice(0, 2).map(cat => (
-                    <span key={cat.id} className="bg-white/5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-[0.1em] opacity-50 border border-white/5">{cat.name}</span>
+                    <span key={cat.id} className="bg-white/5 px-2 py-1 md:px-3 md:py-1.5 rounded-lg md:rounded-xl text-[8px] md:text-[10px] font-black uppercase tracking-[0.1em] opacity-50 border border-white/5">{cat.name}</span>
                 ))}
             </div>
         )}
         
         <div className="mt-auto">
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex justify-between items-center mb-4 md:mb-6">
              <div className="flex flex-col">
                 {discountTotal > 0 && (
-                    <span className="text-xs opacity-40 line-through font-bold mb-0.5">${Number(originalPrice).toFixed(2)}</span>
+                    <span className="text-[10px] md:text-xs opacity-40 line-through font-bold mb-0.5">${Number(originalPrice).toFixed(2)}</span>
                 )}
                 {finalPrice === 0 ? (
-                    <span className="text-green-400 font-black text-3xl tracking-tighter uppercase">Free</span>
+                    <span className="text-green-400 font-black text-2xl md:text-3xl tracking-tighter uppercase">Free</span>
                 ) : (
                     <div className="flex items-baseline gap-1">
-                        <span className={`font-black text-3xl tracking-tighter ${theme.colors.text}`}>${Number(finalPrice).toFixed(2)}</span>
-                        <span className="text-[10px] opacity-30 font-black uppercase">USD</span>
+                        <span className={`font-black text-2xl md:text-3xl tracking-tighter ${theme.colors.text}`}>${Number(finalPrice).toFixed(2)}</span>
+                        <span className="text-[8px] md:text-[10px] opacity-30 font-black uppercase">USD</span>
                     </div>
                 )}
              </div>
              {reviewCount > 0 && (
-                <div className="text-right">
+                <div className="text-right hidden sm:block">
                     <div className="text-[10px] opacity-40 font-black uppercase tracking-widest mb-0.5">{reviewCount} reviews</div>
                     <div className="text-[11px] text-blue-400 font-black uppercase tracking-tighter">Very Positive</div>
                 </div>
              )}
           </div>
           
-          <div className="flex gap-4">
+          <div className="flex gap-2 md:gap-4">
             {isOwned ? (
                 <div className={`bg-white/5 text-gray-400 text-[11px] font-black py-4 px-4 rounded-2xl flex-1 flex items-center justify-center gap-3 border border-white/10 cursor-default`}>
                     <FontAwesomeIcon icon={faGamepad} className="text-sm" /> OWNED
@@ -124,11 +157,24 @@ const GameCard = ({ game, onBuy, onBuyNow, isOwned }) => {
             ) : (
                 <>
                     <button 
-                        onClick={onBuy}
-                        className={`bg-white/5 hover:bg-white/10 ${theme.colors.text} text-[11px] font-black py-4 px-4 rounded-2xl transition-all duration-300 flex-1 flex items-center justify-center gap-3 border border-white/10 active:scale-95`}
+                        onClick={handleAddToCart}
+                        disabled={isAdded}
+                        className={`bg-white/5 hover:bg-white/10 ${theme.colors.text} text-[11px] font-black py-4 px-4 rounded-2xl transition-all duration-300 flex-1 flex items-center justify-center gap-3 border border-white/10 active:scale-95 disabled:cursor-default disabled:opacity-100 ${isAdded ? 'bg-green-500/20 border-green-500/50 text-green-500' : ''}`}
                         title="Add to Cart"
                     >
-                        <FontAwesomeIcon icon={faCartPlus} className="text-sm opacity-60" /> ADD
+                        {isAdded ? (
+                             <motion.span 
+                                initial={{ scale: 0.5, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                className="flex items-center gap-2"
+                             >
+                                <FontAwesomeIcon icon={faCheck} /> ADDED
+                             </motion.span>
+                        ) : (
+                             <>
+                                <FontAwesomeIcon icon={faCartPlus} className="text-sm opacity-60" /> ADD
+                             </>
+                        )}
                     </button>
                     {onBuyNow && (
                         <button 

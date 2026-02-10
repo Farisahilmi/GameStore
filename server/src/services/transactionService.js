@@ -43,7 +43,7 @@ const createTransaction = async (userId, gameIds, recipientId = null, paymentMet
     throw error;
   }
 
-  // 3. Calculate total with discounts
+  // 3. Calculate total with discounts and prepare items
   const now = new Date();
   const activeSale = await prisma.saleEvent.findFirst({
     where: {
@@ -58,19 +58,7 @@ const createTransaction = async (userId, gameIds, recipientId = null, paymentMet
 
   const saleDiscount = activeSale ? activeSale.discountPercent : 0;
   
-  let subtotal = games.reduce((sum, game) => {
-    const publisherDiscount = game.discount || 0;
-    // Calculate total discount, capped at 100%
-    const totalDiscount = Math.min(100, publisherDiscount + saleDiscount);
-    
-    // Convert Decimal to number for calculation
-    const basePrice = Number(game.price.toString());
-    const finalPrice = basePrice * (1 - totalDiscount / 100);
-    
-    // Ensure 2 decimal places precision
-    return sum + Number(finalPrice.toFixed(2));
-  }, 0);
-
+  // Prepare voucher data
   let voucherData = null;
   if (voucherCode) {
     const vCode = voucherCode.toUpperCase();
@@ -96,11 +84,27 @@ const createTransaction = async (userId, gameIds, recipientId = null, paymentMet
         error.statusCode = 400;
         throw error;
     }
-    
-    subtotal = subtotal * (1 - voucherData.discountPercent / 100);
   }
 
-  const total = Math.max(0, Number(subtotal.toFixed(2)));
+  // Calculate items with individual prices
+  const transactionItemsData = games.map(game => {
+    const publisherDiscount = game.discount || 0;
+    const totalDiscount = Math.min(100, publisherDiscount + saleDiscount);
+    const basePrice = Number(game.price.toString());
+    let finalPrice = basePrice * (1 - totalDiscount / 100);
+    
+    // Apply voucher discount if applicable
+    if (voucherData) {
+        finalPrice = finalPrice * (1 - voucherData.discountPercent / 100);
+    }
+
+    return {
+        gameId: game.id,
+        price: Number(finalPrice.toFixed(2))
+    };
+  });
+
+  const total = transactionItemsData.reduce((sum, item) => sum + item.price, 0);
 
   // 4. Create Transaction and Library entries in a transaction
   const result = await prisma.$transaction(async (prisma) => {
@@ -164,12 +168,19 @@ const createTransaction = async (userId, gameIds, recipientId = null, paymentMet
         recipientId: recipientId ? parseInt(recipientId) : null,
         total,
         status: 'SUCCESS',
-        games: {
-          connect: gameIds.map(id => ({ id }))
+        items: {
+          create: transactionItemsData.map(item => ({
+            gameId: item.gameId,
+            price: item.price
+          }))
         }
       },
       include: {
-        games: true,
+        items: {
+            include: {
+                game: true
+            }
+        },
         recipient: { select: { name: true } }
       }
     });
@@ -190,8 +201,12 @@ const createTransaction = async (userId, gameIds, recipientId = null, paymentMet
         gameId
       }))
     });
-
-    return transaction;
+    
+    // Transform result to match expected format (optional but good for compatibility)
+    return {
+        ...transaction,
+        games: transaction.items.map(item => item.game)
+    };
   });
 
   return result;
@@ -208,12 +223,16 @@ const getUserTransactions = async (userId) => {
     include: {
       user: { select: { name: true } },
       recipient: { select: { name: true } },
-      games: {
-        select: {
-          id: true,
-          title: true,
-          price: true,
-          imageUrl: true
+      items: {
+        include: {
+          game: {
+            select: {
+              id: true,
+              title: true,
+              price: true,
+              imageUrl: true
+            }
+          }
         }
       }
     },
@@ -222,7 +241,10 @@ const getUserTransactions = async (userId) => {
     }
   });
 
-  return transactions;
+  return transactions.map(t => ({
+      ...t,
+      games: t.items.map(i => i.game)
+  }));
 };
 
 const getAllTransactions = async () => {
@@ -235,10 +257,14 @@ const getAllTransactions = async () => {
           email: true
         }
       },
-      games: {
-        select: {
-          id: true,
-          title: true
+      items: {
+        include: {
+            game: {
+                select: {
+                    id: true,
+                    title: true
+                }
+            }
         }
       }
     },
@@ -247,7 +273,10 @@ const getAllTransactions = async () => {
     }
   });
 
-  return transactions;
+  return transactions.map(t => ({
+      ...t,
+      games: t.items.map(i => i.game)
+  }));
 };
 
 module.exports = {

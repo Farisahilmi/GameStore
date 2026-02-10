@@ -204,17 +204,17 @@ const Hero = ({ directPurchase }) => {
       }`}></div>
       
       {/* Content */}
-      <div className="container mx-auto px-8 md:px-20 relative z-10 flex flex-col justify-center h-full max-w-6xl mr-auto ml-0 items-start text-left">
+      <div className="container mx-auto px-6 md:px-20 relative z-10 flex flex-col justify-center h-full max-w-6xl mr-auto ml-0 items-start text-left">
         <motion.div 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="flex flex-wrap items-center gap-3 mb-8"
+            className="flex flex-wrap items-center gap-2 md:gap-3 mb-4 md:mb-8"
         >
-            <span className={`${theme.colors.accent} font-black tracking-[0.3em] uppercase text-[10px] md:text-xs ${theme.colors.glass} px-5 py-2 rounded-full shadow-2xl`}>
-                Featured & Recommended
+            <span className={`${theme.colors.accent} font-black tracking-[0.2em] md:tracking-[0.3em] uppercase text-[9px] md:text-xs ${theme.colors.glass} px-3 py-1.5 md:px-5 md:py-2 rounded-full shadow-2xl`}>
+                Featured
             </span>
             {currentGame.genre && (
-                <span className="bg-white/10 backdrop-blur-md text-white/60 text-[10px] md:text-xs px-4 py-2 rounded-full border border-white/10 font-bold">
+                <span className="bg-white/10 backdrop-blur-md text-white/60 text-[9px] md:text-xs px-3 py-1.5 md:px-4 md:py-2 rounded-full border border-white/10 font-bold">
                     {currentGame.genre}
                 </span>
             )}
@@ -227,11 +227,11 @@ const Hero = ({ directPurchase }) => {
             key={currentGame.title}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`text-4xl md:text-6xl lg:text-7xl font-black ${theme.name === 'Clean Light' ? 'text-black' : 'text-white'} mb-8 drop-shadow-2xl leading-[0.9] max-w-4xl tracking-tighter min-h-[1.8em] flex items-center`}
+            className={`text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black ${theme.name === 'Clean Light' ? 'text-black' : 'text-white'} mb-4 md:mb-8 drop-shadow-2xl leading-[1.1] md:leading-[0.9] max-w-4xl tracking-tighter min-h-[2em] md:min-h-[1.8em] flex items-center`}
         >
-          <span>
+          <span className="line-clamp-2">
           {displayText}
-          <span className={`animate-pulse border-r-[8px] md:border-r-[12px] ${theme.colors.accent.replace('text-', 'border-')} ml-3`}></span>
+          <span className={`animate-pulse border-r-[6px] md:border-r-[12px] ${theme.colors.accent.replace('text-', 'border-')} ml-1 md:ml-3`}></span>
           </span>
         </motion.h1>
 
@@ -239,22 +239,22 @@ const Hero = ({ directPurchase }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.7 }}
             transition={{ delay: 0.5 }}
-            className={`${theme.name === 'Clean Light' ? 'text-gray-800' : 'text-gray-300'} text-xl md:text-2xl mb-12 max-w-2xl line-clamp-2 leading-relaxed font-medium`}
+            className={`${theme.name === 'Clean Light' ? 'text-gray-800' : 'text-gray-300'} text-sm sm:text-lg md:text-2xl mb-6 md:mb-12 max-w-xl md:max-w-2xl line-clamp-2 leading-relaxed font-medium`}
         >
             {currentGame.description || "Experience the next generation of gaming with stunning visuals and immersive gameplay."}
         </motion.p>
         
-        <div className="flex flex-col sm:flex-row gap-6">
+        <div className="flex flex-row gap-3 md:gap-6 w-full md:w-auto">
             <Link 
                 to={`/games/${currentGame.id}`} 
-                className={`bg-white text-black hover:bg-gray-100 px-14 py-5 rounded-2xl text-xl font-black transition-all duration-500 ${theme.colors.shadow} transform hover:scale-105 hover:-translate-y-2 flex items-center justify-center gap-4 active:scale-95`}
+                className={`flex-1 md:flex-initial bg-white text-black hover:bg-gray-100 px-6 py-3 md:px-14 md:py-5 rounded-xl md:rounded-2xl text-sm md:text-xl font-black transition-all duration-500 ${theme.colors.shadow} transform hover:scale-105 hover:-translate-y-2 flex items-center justify-center gap-2 md:gap-4 active:scale-95 whitespace-nowrap`}
             >
                 View Details
             </Link>
             {currentGame.price !== undefined && (
                  <button 
                     onClick={() => directPurchase(currentGame)}
-                    className="bg-blue-600 hover:bg-blue-500 text-white px-14 py-5 rounded-2xl text-xl font-black transition-all duration-500 shadow-xl transform hover:scale-105 hover:-translate-y-2 flex items-center justify-center gap-4 active:scale-95"
+                    className="flex-1 md:flex-initial bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 md:px-14 md:py-5 rounded-xl md:rounded-2xl text-sm md:text-xl font-black transition-all duration-500 shadow-xl transform hover:scale-105 hover:-translate-y-2 flex items-center justify-center gap-2 md:gap-4 active:scale-95 whitespace-nowrap"
                 >
                     <FontAwesomeIcon icon={faBolt} /> Buy Now
                 </button>
@@ -263,15 +263,15 @@ const Hero = ({ directPurchase }) => {
       </div>
 
       {/* Slide Indicators */}
-      <div className="absolute bottom-12 right-12 flex gap-4 z-20">
+      <div className="absolute bottom-6 right-6 md:bottom-12 md:right-12 flex gap-2 md:gap-4 z-20">
           {slides.map((_, index) => (
               <button 
                 key={index}
                 onClick={() => setCurrentSlide(index)}
-                className={`h-1.5 rounded-full transition-all duration-700 ${
+                className={`h-1 md:h-1.5 rounded-full transition-all duration-700 ${
                     index === currentSlide 
-                    ? `w-16 ${theme.colors.accent.replace('text-', 'bg-')}` 
-                    : 'w-4 bg-white/20 hover:bg-white/40'
+                    ? `w-8 md:w-16 ${theme.colors.accent.replace('text-', 'bg-')}` 
+                    : 'w-2 md:w-4 bg-white/20 hover:bg-white/40'
                 }`}
               />
           ))}

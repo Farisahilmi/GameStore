@@ -1,76 +1,22 @@
+
 const express = require('express');
 const router = express.Router();
-const prisma = require('../utils/prisma');
+const reviewController = require('../controllers/reviewController');
 const { authenticate } = require('../middlewares/authMiddleware');
 
 // Get reviews for a game
-router.get('/:gameId', async (req, res) => {
-  try {
-    const gameId = parseInt(req.params.gameId);
-    
-    const reviews = await prisma.review.findMany({
-      where: { gameId },
-      include: {
-        user: {
-          select: { id: true, name: true, theme: true }
-        }
-      },
-      orderBy: { createdAt: 'desc' }
-    });
+router.get('/:gameId', reviewController.getGameReviews);
 
-    res.json({ data: reviews });
-  } catch (error) {
-    console.error('Get reviews error:', error);
-    res.status(500).json({ error: 'Failed to fetch reviews' });
-  }
-});
+// Add a review
+router.post('/:gameId', authenticate, reviewController.addReview);
 
-// Create a review
-router.post('/', authenticate, async (req, res) => {
-  try {
-    const { gameId, rating, comment } = req.body;
-    const userId = req.user.id;
+// Update a review
+router.put('/:id', authenticate, reviewController.updateReview);
 
-    // Check if user owns the game (optional but recommended)
-    // For now, let's allow review if they played it or just want to review
-    // Ideally check Library or Transaction
+// Delete a review
+router.delete('/:id', authenticate, reviewController.deleteReview);
 
-    const review = await prisma.review.create({
-      data: {
-        userId,
-        gameId: parseInt(gameId),
-        rating: parseInt(rating),
-        comment
-      },
-      include: {
-        user: {
-          select: { id: true, name: true }
-        },
-        game: {
-            select: { title: true }
-        }
-      }
-    });
-
-    // Create Activity
-    await prisma.activity.create({
-        data: {
-            userId,
-            type: 'REVIEW',
-            message: `reviewed ${review.game.title} - ${'★'.repeat(rating)}`,
-            metadata: JSON.stringify({ gameId: review.gameId, rating })
-        }
-    });
-
-    res.status(201).json({ data: review });
-  } catch (error) {
-    // Check for unique constraint violation (already reviewed)
-    if (error.code === 'P2002') {
-      return res.status(400).json({ error: 'You have already reviewed this game' });
-    }
-    console.error('Create review error:', error);
-    res.status(500).json({ error: 'Failed to post review' });
-  }
-});
+// Vote on a review
+router.post('/vote/:id', authenticate, reviewController.voteReview);
 
 module.exports = router;

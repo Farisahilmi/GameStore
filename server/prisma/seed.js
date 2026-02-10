@@ -1,4 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
+const bcrypt = require('bcryptjs');
 const prisma = new PrismaClient();
 
 const categories = [
@@ -45,21 +46,24 @@ const gamesData = [
     description: "Cyberpunk 2077 is an open-world, action-adventure RPG set in the dark future of Night City — a dangerous megalopolis obsessed with power, glamor, and relentless body modification.",
     price: 59.99,
     coverImage: "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/1091500/header.jpg",
-    categories: ["RPG", "Open World", "Sci-Fi"]
+    categories: ["RPG", "Open World", "Sci-Fi"],
+    videoUrl: "https://cdn.pixabay.com/video/2023/10/15/185090-874636683_large.mp4"
   },
   {
     title: "Starfield",
     description: "Starfield is the first new universe in 25 years from Bethesda Game Studios, the award-winning creators of The Elder Scrolls V: Skyrim and Fallout 4.",
     price: 69.99,
     coverImage: "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/1716740/header.jpg",
-    categories: ["RPG", "Open World", "Sci-Fi", "Space"]
+    categories: ["RPG", "Open World", "Sci-Fi", "Space"],
+    videoUrl: "https://cdn.pixabay.com/video/2021/08/04/83896-583206060_large.mp4"
   },
   {
     title: "Call of Duty®: Modern Warfare® III",
     description: "In the direct sequel to the record-breaking Call of Duty®: Modern Warfare® II, Captain Price and Task Force 141 face off against the ultimate threat.",
     price: 69.99,
     coverImage: "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/2519060/header.jpg",
-    categories: ["Action", "Shooter"]
+    categories: ["Action", "Shooter"],
+    videoUrl: "https://cdn.pixabay.com/video/2020/05/25/40139-424075573_large.mp4"
   },
   {
     title: "Red Dead Redemption 2",
@@ -1039,6 +1043,31 @@ const gamesData = [
 async function main() {
   console.log('Start seeding...');
 
+  // Create Users
+  console.log('Creating users...');
+  const users = [
+    { email: 'admin@gamestore.com', password: 'password123', name: 'Admin User', role: 'ADMIN' },
+    { email: 'publisher@gamestore.com', password: 'password123', name: 'Publisher User', role: 'PUBLISHER' },
+    { email: 'user@gamestore.com', password: 'password123', name: 'Standard User', role: 'USER' }
+  ];
+
+  for (const user of users) {
+    const hashedPassword = await bcrypt.hash(user.password, 10);
+    await prisma.user.upsert({
+      where: { email: user.email },
+      update: {
+        role: user.role // Ensure role is correct even if user exists
+      },
+      create: {
+        email: user.email,
+        password: hashedPassword,
+        name: user.name,
+        role: user.role,
+        walletBalance: 1000.00
+      }
+    });
+  }
+
   // Create categories
   console.log('Creating categories...');
   for (const name of categories) {
@@ -1052,7 +1081,7 @@ async function main() {
   // Create games
   console.log('Creating games...');
   for (const game of gamesData) {
-    const { categories: gameCategories, coverImage, ...gameData } = game;
+    const { categories: gameCategories, coverImage, videoUrl, ...gameData } = game;
     
     // Check if game exists
     const existingGame = await prisma.game.findFirst({
@@ -1068,6 +1097,7 @@ async function main() {
         data: {
           ...gameData,
           imageUrl: coverImage,
+          videoUrl: videoUrl,
           categories: {
             set: [], // Clear existing connections
             connect: gameCategories.map(c => ({ name: c }))
@@ -1080,6 +1110,7 @@ async function main() {
         data: {
           ...gameData,
           imageUrl: coverImage,
+          videoUrl: videoUrl,
           categories: {
             connect: gameCategories.map(c => ({ name: c }))
           }

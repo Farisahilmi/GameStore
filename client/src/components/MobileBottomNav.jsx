@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHome, faSearch, faGamepad, faUser, faComments } from '@fortawesome/free-solid-svg-icons';
+import { faHome, faSearch, faGamepad, faUser, faShoppingCart } from '@fortawesome/free-solid-svg-icons';
 import { useTheme } from '../context/ThemeContext';
 
 const MobileBottomNav = ({ user, cartCount, notifications }) => {
@@ -14,7 +14,7 @@ const MobileBottomNav = ({ user, cartCount, notifications }) => {
     { path: '/', icon: faHome, label: 'Home' },
     { path: '/browse', icon: faSearch, label: 'Browse' },
     { path: '/library', icon: faGamepad, label: 'Library' },
-    // { path: '/chat', icon: faComments, label: 'Chat', badge: notifications.length > 0 }, // Optional: separate chat page
+    { path: '/cart', icon: faShoppingCart, label: 'Cart', badge: cartCount > 0 },
     { path: `/profile/${user?.id}`, icon: faUser, label: 'Profile' },
   ];
 

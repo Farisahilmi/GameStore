@@ -5,7 +5,7 @@ import GameCard from './GameCard';
 import { useTheme } from '../context/ThemeContext';
 import { GameCardSkeleton } from './Skeleton';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faTimes, faFilter } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faTimes, faFilter, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 
 const BrowseGames = ({ addToCart, library }) => {
   const { theme } = useTheme();
@@ -23,6 +23,18 @@ const BrowseGames = ({ addToCart, library }) => {
   const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get('page')) || 1);
   const [totalPages, setTotalPages] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
+
+  // Accordion States
+  const [expandedSections, setExpandedSections] = useState({
+      search: true,
+      categories: true,
+      price: true,
+      sort: true
+  });
+
+  const toggleSection = (section) => {
+      setExpandedSections(prev => ({...prev, [section]: !prev[section]}));
+  };
 
   useEffect(() => {
     fetchCategories();
@@ -105,38 +117,19 @@ const BrowseGames = ({ addToCart, library }) => {
                 Browse <span className="text-steam-accent">Games</span>
             </h1>
             
-            <div className="flex gap-3">
-                <form onSubmit={handleSearchSubmit} className="relative flex-1 md:w-80">
-                    <input 
-                        type="text" 
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder="Search titles..."
-                        className={`w-full ${theme.name === 'Clean Light' ? 'bg-gray-100' : 'bg-black/20'} ${theme.colors.text} pl-12 pr-4 py-3 rounded-xl border ${theme.colors.border} focus:border-steam-accent outline-none transition shadow-inner`}
-                    />
-                    <FontAwesomeIcon icon={faSearch} className="absolute left-4 top-1/2 -translate-y-1/2 opacity-30" />
-                    {searchTerm && (
-                        <button 
-                            type="button"
-                            onClick={() => { setSearchTerm(''); updateFilters({ search: '', page: '1' }); }}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 opacity-50 hover:opacity-100"
-                        >
-                            <FontAwesomeIcon icon={faTimes} />
-                        </button>
-                    )}
-                </form>
+            <div className="flex gap-3 md:hidden">
                 <button 
                     onClick={() => setShowFilters(!showFilters)}
-                    className={`md:hidden px-4 py-3 rounded-xl border ${theme.colors.border} ${showFilters ? 'bg-steam-accent text-white' : theme.colors.text + ' opacity-70'}`}
+                    className={`w-full px-4 py-3 rounded-xl border ${theme.colors.border} ${showFilters ? 'bg-steam-accent text-white' : theme.colors.text + ' opacity-70'}`}
                 >
-                    <FontAwesomeIcon icon={faFilter} />
+                    <FontAwesomeIcon icon={faFilter} /> Filters
                 </button>
             </div>
         </div>
         
         <div className="flex flex-col lg:flex-row gap-10">
             {/* Sidebar Filters */}
-            <div className={`lg:w-64 space-y-8 ${showFilters ? 'fixed inset-0 z-50 bg-black/90 p-10 overflow-y-auto lg:relative lg:inset-auto lg:bg-transparent lg:p-0' : 'hidden lg:block'}`}>
+            <div className={`lg:w-72 space-y-6 ${showFilters ? 'fixed inset-0 z-50 bg-black/90 p-10 overflow-y-auto lg:relative lg:inset-auto lg:bg-transparent lg:p-0' : 'hidden lg:block'}`}>
                 {showFilters && (
                     <button 
                         onClick={() => setShowFilters(false)}
@@ -146,97 +139,160 @@ const BrowseGames = ({ addToCart, library }) => {
                     </button>
                 )}
 
-                <div>
-                    <h3 className={`text-xs font-bold uppercase tracking-widest mb-4 opacity-50 ${theme.colors.text}`}>Categories</h3>
-                    <div className="flex flex-col gap-1">
-                        <button 
-                            onClick={() => updateFilters({ category: '' })}
-                            className={`text-left px-4 py-2.5 rounded-lg text-sm font-bold transition-all ${!selectedCategory ? 'bg-steam-accent text-white shadow-lg' : 'opacity-60 hover:opacity-100 hover:bg-black/10'}`}
-                        >
-                            All Genres
-                        </button>
-                        {categories.map(cat => (
-                            <button 
-                                key={cat.id}
-                                onClick={() => updateFilters({ category: cat.name })}
-                                className={`text-left px-4 py-2.5 rounded-lg text-sm font-bold transition-all ${selectedCategory === cat.name ? 'bg-steam-accent text-white shadow-lg' : 'opacity-60 hover:opacity-100 hover:bg-black/10'}`}
-                            >
-                                {cat.name}
-                            </button>
-                        ))}
+                {/* Search Section */}
+                <div className={`p-5 rounded-2xl ${theme.colors.card} border ${theme.colors.border} ${theme.colors.shadow}`}>
+                    <div 
+                        className="flex justify-between items-center cursor-pointer mb-4"
+                        onClick={() => toggleSection('search')}
+                    >
+                        <h3 className={`text-xs font-bold uppercase tracking-widest opacity-50 ${theme.colors.text}`}>Search</h3>
+                        <FontAwesomeIcon icon={expandedSections.search ? faChevronUp : faChevronDown} className="text-xs opacity-50" />
                     </div>
+                    
+                    {expandedSections.search && (
+                        <form onSubmit={handleSearchSubmit} className="relative">
+                            <input 
+                                type="text" 
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                placeholder="Search titles..."
+                                className={`w-full ${theme.name === 'Clean Light' ? 'bg-gray-100' : 'bg-black/20'} ${theme.colors.text} pl-10 pr-8 py-3 rounded-xl border ${theme.colors.border} focus:border-steam-accent outline-none transition text-sm font-medium`}
+                            />
+                            <FontAwesomeIcon icon={faSearch} className="absolute left-4 top-1/2 -translate-y-1/2 opacity-30 text-xs" />
+                            {searchTerm && (
+                                <button 
+                                    type="button"
+                                    onClick={() => { setSearchTerm(''); updateFilters({ search: '', page: '1' }); }}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 opacity-50 hover:opacity-100 text-xs"
+                                >
+                                    <FontAwesomeIcon icon={faTimes} />
+                                </button>
+                            )}
+                        </form>
+                    )}
                 </div>
 
-                <div>
-                    <h3 className={`text-xs font-bold uppercase tracking-widest mb-4 opacity-50 ${theme.colors.text}`}>Price Range</h3>
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-2">
-                            <input 
-                                type="number" 
-                                placeholder="Min" 
-                                value={minPrice}
-                                onChange={(e) => setMinPrice(e.target.value)}
-                                onBlur={() => updateFilters({ minPrice })}
-                                className={`w-full ${theme.name === 'Clean Light' ? 'bg-gray-100' : 'bg-black/20'} ${theme.colors.text} p-2 rounded-lg border ${theme.colors.border} text-sm outline-none focus:border-steam-accent`}
-                            />
-                            <span className="opacity-30">-</span>
-                            <input 
-                                type="number" 
-                                placeholder="Max" 
-                                value={maxPrice}
-                                onChange={(e) => setMaxPrice(e.target.value)}
-                                onBlur={() => updateFilters({ maxPrice })}
-                                className={`w-full ${theme.name === 'Clean Light' ? 'bg-gray-100' : 'bg-black/20'} ${theme.colors.text} p-2 rounded-lg border ${theme.colors.border} text-sm outline-none focus:border-steam-accent`}
-                            />
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                            {[
-                                { label: 'Free', min: '0', max: '0' },
-                                { label: '< $10', min: '0', max: '10' },
-                                { label: '$10 - $50', min: '10', max: '50' },
-                                { label: '> $50', min: '50', max: '' },
-                            ].map((preset) => (
+                {/* Categories Section */}
+                <div className={`p-5 rounded-2xl ${theme.colors.card} border ${theme.colors.border} ${theme.colors.shadow}`}>
+                    <div 
+                        className="flex justify-between items-center cursor-pointer mb-4"
+                        onClick={() => toggleSection('categories')}
+                    >
+                        <h3 className={`text-xs font-bold uppercase tracking-widest opacity-50 ${theme.colors.text}`}>Categories</h3>
+                        <FontAwesomeIcon icon={expandedSections.categories ? faChevronUp : faChevronDown} className="text-xs opacity-50" />
+                    </div>
+
+                    {expandedSections.categories && (
+                        <div className="flex flex-col gap-1 max-h-60 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
+                            <button 
+                                onClick={() => updateFilters({ category: '' })}
+                                className={`text-left px-4 py-2.5 rounded-lg text-xs font-bold transition-all ${!selectedCategory ? 'bg-steam-accent text-white shadow-lg' : 'opacity-60 hover:opacity-100 hover:bg-white/5'}`}
+                            >
+                                All Genres
+                            </button>
+                            {categories.map(cat => (
                                 <button 
-                                    key={preset.label}
-                                    onClick={() => {
-                                        if (minPrice === preset.min && maxPrice === preset.max) {
-                                            // Deselect
-                                            setMinPrice('');
-                                            setMaxPrice('');
-                                            updateFilters({ minPrice: '', maxPrice: '' });
-                                        } else {
-                                            // Select
-                                            setMinPrice(preset.min);
-                                            setMaxPrice(preset.max);
-                                            updateFilters({ minPrice: preset.min, maxPrice: preset.max });
-                                        }
-                                    }}
-                                    className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all border ${
-                                        minPrice === preset.min && maxPrice === preset.max
-                                        ? 'bg-steam-accent text-white border-steam-accent'
-                                        : 'border-white/10 opacity-60 hover:opacity-100 hover:bg-white/5'
-                                    }`}
+                                    key={cat.id}
+                                    onClick={() => updateFilters({ category: cat.name })}
+                                    className={`text-left px-4 py-2.5 rounded-lg text-xs font-bold transition-all ${selectedCategory === cat.name ? 'bg-steam-accent text-white shadow-lg' : 'opacity-60 hover:opacity-100 hover:bg-white/5'}`}
                                 >
-                                    {preset.label}
+                                    {cat.name}
                                 </button>
                             ))}
                         </div>
-                    </div>
+                    )}
                 </div>
 
-                <div>
-                    <h3 className={`text-xs font-bold uppercase tracking-widest mb-4 opacity-50 ${theme.colors.text}`}>Sort By</h3>
-                    <select 
-                        value={selectedSort}
-                        onChange={(e) => updateFilters({ sort: e.target.value })}
-                        className={`w-full ${theme.colors.card} ${theme.colors.text} p-3 rounded-xl border ${theme.colors.border} outline-none focus:border-steam-accent text-sm font-bold cursor-pointer shadow-inner`}
+                {/* Price Range Section */}
+                <div className={`p-5 rounded-2xl ${theme.colors.card} border ${theme.colors.border} ${theme.colors.shadow}`}>
+                    <div 
+                        className="flex justify-between items-center cursor-pointer mb-4"
+                        onClick={() => toggleSection('price')}
                     >
-                        <option value="newest" className="text-black">Newest First</option>
-                        <option value="oldest" className="text-black">Oldest First</option>
-                        <option value="price_asc" className="text-black">Price: Low to High</option>
-                        <option value="price_desc" className="text-black">Price: High to Low</option>
-                        <option value="name_asc" className="text-black">Name: A-Z</option>
-                    </select>
+                        <h3 className={`text-xs font-bold uppercase tracking-widest opacity-50 ${theme.colors.text}`}>Price Range</h3>
+                        <FontAwesomeIcon icon={expandedSections.price ? faChevronUp : faChevronDown} className="text-xs opacity-50" />
+                    </div>
+
+                    {expandedSections.price && (
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                                <input 
+                                    type="number" 
+                                    placeholder="Min" 
+                                    value={minPrice}
+                                    onChange={(e) => setMinPrice(e.target.value)}
+                                    onBlur={() => updateFilters({ minPrice })}
+                                    className={`w-full ${theme.name === 'Clean Light' ? 'bg-gray-100' : 'bg-black/20'} ${theme.colors.text} p-2.5 rounded-lg border ${theme.colors.border} text-xs outline-none focus:border-steam-accent font-medium`}
+                                />
+                                <span className="opacity-30">-</span>
+                                <input 
+                                    type="number" 
+                                    placeholder="Max" 
+                                    value={maxPrice}
+                                    onChange={(e) => setMaxPrice(e.target.value)}
+                                    onBlur={() => updateFilters({ maxPrice })}
+                                    className={`w-full ${theme.name === 'Clean Light' ? 'bg-gray-100' : 'bg-black/20'} ${theme.colors.text} p-2.5 rounded-lg border ${theme.colors.border} text-xs outline-none focus:border-steam-accent font-medium`}
+                                />
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                {[
+                                    { label: 'Free', min: '0', max: '0' },
+                                    { label: '< $10', min: '0', max: '10' },
+                                    { label: '$10 - $50', min: '10', max: '50' },
+                                    { label: '> $50', min: '50', max: '' },
+                                ].map((preset) => (
+                                    <button 
+                                        key={preset.label}
+                                        onClick={() => {
+                                            if (minPrice === preset.min && maxPrice === preset.max) {
+                                                // Deselect
+                                                setMinPrice('');
+                                                setMaxPrice('');
+                                                updateFilters({ minPrice: '', maxPrice: '' });
+                                            } else {
+                                                // Select
+                                                setMinPrice(preset.min);
+                                                setMaxPrice(preset.max);
+                                                updateFilters({ minPrice: preset.min, maxPrice: preset.max });
+                                            }
+                                        }}
+                                        className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all border ${
+                                            minPrice === preset.min && maxPrice === preset.max
+                                            ? 'bg-steam-accent text-white border-steam-accent'
+                                            : 'border-white/10 opacity-60 hover:opacity-100 hover:bg-white/5'
+                                        }`}
+                                    >
+                                        {preset.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Sort Section */}
+                <div className={`p-5 rounded-2xl ${theme.colors.card} border ${theme.colors.border} ${theme.colors.shadow}`}>
+                     <div 
+                        className="flex justify-between items-center cursor-pointer mb-4"
+                        onClick={() => toggleSection('sort')}
+                    >
+                        <h3 className={`text-xs font-bold uppercase tracking-widest opacity-50 ${theme.colors.text}`}>Sort By</h3>
+                        <FontAwesomeIcon icon={expandedSections.sort ? faChevronUp : faChevronDown} className="text-xs opacity-50" />
+                    </div>
+                    
+                    {expandedSections.sort && (
+                        <select 
+                            value={selectedSort}
+                            onChange={(e) => updateFilters({ sort: e.target.value })}
+                            className={`w-full ${theme.colors.card} ${theme.colors.text} p-3 rounded-xl border ${theme.colors.border} outline-none focus:border-steam-accent text-xs font-bold cursor-pointer shadow-inner`}
+                        >
+                            <option value="newest" className="text-black">Newest First</option>
+                            <option value="oldest" className="text-black">Oldest First</option>
+                            <option value="price_asc" className="text-black">Price: Low to High</option>
+                            <option value="price_desc" className="text-black">Price: High to Low</option>
+                            <option value="name_asc" className="text-black">Name: A-Z</option>
+                        </select>
+                    )}
                 </div>
 
                 <button 
@@ -251,7 +307,7 @@ const BrowseGames = ({ addToCart, library }) => {
                     }}
                     className={`w-full py-3 rounded-xl border-2 border-dashed ${theme.colors.border} opacity-40 hover:opacity-100 hover:border-red-500/50 hover:text-red-500 transition-all text-xs font-black uppercase tracking-widest`}
                 >
-                    Clear All
+                    Clear All Filters
                 </button>
             </div>
 

@@ -199,13 +199,159 @@ const GameDetails = ({ addToCart, directPurchase, library }) => {
   );
 
   if (!game) return null;
+  
+  // Mobile View
+  const MobileView = () => (
+    <div className={`md:hidden pb-24 relative`}>
+        {/* Full Header Image */}
+        <div className="relative h-64 w-full">
+            <img 
+                src={game.imageUrl} 
+                alt={game.title} 
+                className="w-full h-full object-cover"
+                onClick={() => setIsLightboxOpen(true)}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
+            <div className="absolute bottom-4 left-4 right-4">
+                <h1 className="text-2xl font-black text-white leading-tight mb-2 drop-shadow-md">{game.title}</h1>
+                <div className="flex items-center gap-2">
+                    {game.publisher && <span className="text-xs font-bold opacity-80">{game.publisher.name}</span>}
+                    {game.avgRating > 0 && (
+                        <div className="flex items-center gap-1 bg-black/40 px-2 py-0.5 rounded text-yellow-400 text-xs font-bold backdrop-blur-sm">
+                            <FontAwesomeIcon icon={faStar} /> {game.avgRating.toFixed(1)}
+                        </div>
+                    )}
+                </div>
+            </div>
+            <button 
+                onClick={() => navigate('/')}
+                className="absolute top-4 left-4 w-8 h-8 bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center text-white"
+            >
+                ←
+            </button>
+        </div>
+
+        <div className="p-4 space-y-6">
+             {/* Price & Status */}
+             <div className="flex items-center justify-between bg-white/5 p-4 rounded-xl border border-white/5">
+                <div>
+                    {game.discountTotal > 0 && <span className="text-xs bg-red-500 text-white px-1.5 py-0.5 rounded mb-1 inline-block">-{game.discountTotal}%</span>}
+                    <div className="text-2xl font-black text-white">
+                        {game.finalPrice === 0 ? 'Free' : `$${Number(game.finalPrice).toFixed(2)}`}
+                    </div>
+                </div>
+                {game.activeSaleName && <span className="text-xs text-blue-400 font-bold uppercase">{game.activeSaleName}</span>}
+             </div>
+
+             {/* Categories Scroll */}
+             <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
+                {game.categories?.map(c => (
+                    <span key={c.id} className="bg-white/10 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap">{c.name}</span>
+                ))}
+             </div>
+
+             {/* Media Scroll */}
+             <div>
+                <h3 className="text-sm font-bold opacity-60 uppercase mb-3">Gallery</h3>
+                <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 snap-x">
+                    {game.trailerUrl && (
+                        <div className="w-64 aspect-video shrink-0 snap-center rounded-lg overflow-hidden relative">
+                             <iframe src={`${game.trailerUrl.replace('watch?v=', 'embed/')}?autoplay=0`} className="w-full h-full" frameBorder="0" allowFullScreen></iframe>
+                        </div>
+                    )}
+                    <div className="w-64 aspect-video shrink-0 snap-center rounded-lg overflow-hidden">
+                        <img src={game.imageUrl} className="w-full h-full object-cover" onClick={() => setIsLightboxOpen(true)} />
+                    </div>
+                    {game.screenshots?.map(ss => (
+                        <div key={ss.id} className="w-64 aspect-video shrink-0 snap-center rounded-lg overflow-hidden">
+                            <img src={ss.url} className="w-full h-full object-cover" onClick={() => { setSelectedImage(ss.url); setIsLightboxOpen(true); }} />
+                        </div>
+                    ))}
+                </div>
+             </div>
+
+             {/* Description */}
+             <div>
+                <h3 className="text-sm font-bold opacity-60 uppercase mb-2">About</h3>
+                <p className="text-sm leading-relaxed opacity-80">{game.description}</p>
+             </div>
+
+             {/* Reviews Preview */}
+             <div>
+                <h3 className="text-sm font-bold opacity-60 uppercase mb-3">Reviews</h3>
+                {reviews.length > 0 ? (
+                    <div className="bg-white/5 p-4 rounded-xl space-y-3">
+                        <div className="flex items-center gap-2 mb-2">
+                             <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-xs font-bold">{reviews[0].user?.name[0]}</div>
+                             <span className="text-sm font-bold">{reviews[0].user?.name}</span>
+                             <div className="flex text-yellow-400 text-xs ml-auto">
+                                {[...Array(5)].map((_, i) => <FontAwesomeIcon key={i} icon={faStar} className={i < reviews[0].rating ? '' : 'text-gray-600'} />)}
+                             </div>
+                        </div>
+                        <p className="text-xs opacity-70 line-clamp-3">"{reviews[0].comment}"</p>
+                    </div>
+                ) : (
+                    <p className="text-xs opacity-50 italic">No reviews yet.</p>
+                )}
+                <button 
+                    onClick={() => {
+                        // Scroll to reviews section if we were using a single page, 
+                        // but here we might just expand or show more.
+                        // For now just toggle tab logic if we reused it, but sticking to simple view.
+                    }} 
+                    className="w-full mt-3 py-2 text-xs font-bold text-blue-400 border border-blue-500/30 rounded-lg"
+                >
+                    Read All Reviews ({reviews.length})
+                </button>
+             </div>
+        </div>
+
+        {/* Sticky Mobile Action Bar */}
+        <div className={`fixed bottom-[64px] left-0 right-0 p-4 bg-black/80 backdrop-blur-xl border-t border-white/10 z-40 flex gap-3`}>
+             {library && library.includes(game.id) ? (
+                 <button onClick={handlePlayGame} className="w-full bg-green-600 text-white font-black py-3 rounded-xl shadow-lg flex items-center justify-center gap-2">
+                     <FontAwesomeIcon icon={faPlayCircle} /> PLAY
+                 </button>
+             ) : (
+                 <>
+                    <button 
+                        onClick={async () => {
+                            setIsAddingToCart(true);
+                            await addToCart(game);
+                            setTimeout(() => setIsAddingToCart(false), 500);
+                        }}
+                        className="flex-1 bg-blue-600 text-white font-bold py-3 rounded-xl shadow-lg flex items-center justify-center gap-2"
+                        disabled={isAddingToCart}
+                    >
+                         {isAddingToCart ? <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin"></div> : <FontAwesomeIcon icon={faCartPlus} />}
+                    </button>
+                    <button 
+                        onClick={async () => {
+                            setIsBuyingNow(true);
+                            await directPurchase(game);
+                            setTimeout(() => setIsBuyingNow(false), 500);
+                        }}
+                        disabled={isBuyingNow}
+                        className="flex-[2] bg-green-600 text-white font-bold py-3 rounded-xl shadow-lg flex items-center justify-center gap-2"
+                    >
+                        {isBuyingNow ? (
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        ) : (
+                            'Buy Now'
+                        )}
+                    </button>
+                 </>
+             )}
+        </div>
+    </div>
+  );
 
   return (
     <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className={`min-h-screen ${theme.colors.bg} ${theme.colors.text} pt-10 pb-20 overflow-x-hidden`}
+        className={`min-h-screen ${theme.colors.bg} ${theme.colors.text} overflow-x-hidden`}
     >
       {/* Lightbox Overlay */}
       <AnimatePresence>
@@ -233,6 +379,9 @@ const GameDetails = ({ addToCart, directPurchase, library }) => {
         )}
       </AnimatePresence>
 
+      <MobileView />
+
+      <div className="hidden md:block pt-10 pb-20">
       {/* Background Ambience */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className={`absolute inset-0 ${theme.colors.bg} opacity-90`}></div>
@@ -762,6 +911,7 @@ const GameDetails = ({ addToCart, directPurchase, library }) => {
                  directPurchase(game, friend.id, friend.name);
              }}
          />
+      </div>
       </div>
     </motion.div>
   );

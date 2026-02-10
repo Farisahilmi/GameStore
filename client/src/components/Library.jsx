@@ -17,6 +17,7 @@ const Library = () => {
   const [downloadingId, setDownloadingId] = useState(null);
   const [progress, setProgress] = useState(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showMobileList, setShowMobileList] = useState(true); // New state for mobile toggle
 
   useEffect(() => {
     fetchLibrary();
@@ -54,6 +55,16 @@ const Library = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper to handle game selection on mobile
+  const handleGameSelect = (game) => {
+      setSelectedGame(game);
+      setShowMobileList(false); // Hide list on mobile when game is selected
+  };
+
+  const handleBackToList = () => {
+      setShowMobileList(true);
   };
 
   const handleDownload = (id) => {
@@ -119,16 +130,16 @@ const Library = () => {
   };
 
   if (loading) return (
-      <div className={`flex h-[calc(100vh-80px)] ${theme.colors.bg} overflow-hidden`}>
+      <div className={`flex flex-col md:flex-row h-[calc(100vh-80px)] ${theme.colors.bg} overflow-hidden`}>
           {/* Sidebar Skeleton */}
-          <div className={`w-64 ${theme.colors.card} border-r ${theme.colors.border} flex flex-col p-4 space-y-4`}>
+          <div className={`w-full md:w-64 ${theme.colors.card} border-r ${theme.colors.border} flex flex-col p-4 space-y-4`}>
               <Skeleton className="h-8 w-full mb-4" />
               {[...Array(10)].map((_, i) => (
                   <Skeleton key={i} className="h-6 w-full" />
               ))}
           </div>
           {/* Content Skeleton */}
-          <div className="flex-1 p-8">
+          <div className="hidden md:block flex-1 p-8">
               <Skeleton className="h-64 w-full rounded-xl mb-8" />
               <div className="flex justify-between items-center mb-10">
                   <Skeleton className="h-12 w-48" />
@@ -155,9 +166,9 @@ const Library = () => {
   );
 
   return (
-    <div className={`flex h-[calc(100vh-80px)] ${theme.colors.bg} overflow-hidden`}>
-      {/* Sidebar List */}
-      <div className={`w-64 ${theme.colors.card} border-r ${theme.colors.border} flex flex-col`}>
+    <div className={`flex flex-col md:flex-row h-[calc(100vh-80px)] ${theme.colors.bg} overflow-hidden`}>
+      {/* Sidebar List - Hidden on mobile if viewing details */}
+      <div className={`w-full md:w-64 ${theme.colors.card} border-r ${theme.colors.border} flex flex-col ${!showMobileList ? 'hidden md:flex' : 'flex h-full'}`}>
           <div className={`p-4 border-b ${theme.colors.border} ${theme.colors.card} sticky top-0`}>
               <input 
                 type="text" 
@@ -171,10 +182,10 @@ const Library = () => {
               {filteredGames.map(game => (
                   <button
                     key={game.id}
-                    onClick={() => setSelectedGame(game)}
-                    className={`w-full text-left px-4 py-2 text-sm truncate transition hover:bg-black/10 ${selectedGame?.id === game.id ? `bg-black/20 ${theme.colors.text} font-medium border-l-2 ${theme.colors.accent.replace('text-', 'border-')}` : `opacity-70 ${theme.colors.text}`}`}
+                    onClick={() => handleGameSelect(game)}
+                    className={`w-full text-left px-4 py-3 md:py-2 text-sm truncate transition hover:bg-black/10 border-b border-white/5 md:border-b-0 ${selectedGame?.id === game.id ? `bg-black/20 ${theme.colors.text} font-medium md:border-l-2 ${theme.colors.accent.replace('text-', 'border-')}` : `opacity-70 ${theme.colors.text}`}`}
                   >
-                      <span className="mr-2 opacity-50">
+                      <span className="mr-3 md:mr-2 opacity-50">
                           {game.isInstalled ? <FontAwesomeIcon icon={faRocket} className="text-blue-400" /> : <FontAwesomeIcon icon={faDownload} />}
                       </span>
                       {game.title}
@@ -186,37 +197,45 @@ const Library = () => {
           </div>
       </div>
 
-      {/* Main Content */}
-      <div className={`flex-1 overflow-y-auto ${theme.colors.bg} relative`}>
+      {/* Main Content - Full width on mobile when active */}
+      <div className={`flex-1 overflow-y-auto ${theme.colors.bg} relative ${showMobileList ? 'hidden md:block' : 'block'}`}>
           {selectedGame && (
               <>
+                {/* Mobile Back Button */}
+                <button 
+                    onClick={handleBackToList}
+                    className="md:hidden absolute top-4 left-4 z-30 bg-black/50 text-white px-3 py-1 rounded-full backdrop-blur-md text-xs font-bold border border-white/20"
+                >
+                    ← Back to Library
+                </button>
+
                 {/* Hero Banner Background */}
-                <div className="relative h-64 md:h-80 w-full">
+                <div className="relative h-48 md:h-80 w-full">
                     <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('${selectedGame.imageUrl}')` }}></div>
                     <div className={`absolute inset-0 bg-gradient-to-t from-${theme.colors.bg.split('-')[1] || 'gray'}-900 via-transparent to-transparent`}></div>
-                    <div className="absolute bottom-6 left-8 z-10">
+                    <div className="absolute bottom-4 left-4 md:bottom-6 md:left-8 z-10 w-full pr-8">
                         {/* <div className="w-24 h-12 mb-4 bg-contain bg-no-repeat bg-left-bottom" style={{ backgroundImage: 'url(https://community.akamai.steamstatic.com/public/shared/images/header/globalheader_logo.png)' }}></div>  */}
-                        <h1 className="text-4xl font-bold text-white drop-shadow-lg mb-4">{selectedGame.title}</h1>
+                        <h1 className="text-2xl md:text-4xl font-bold text-white drop-shadow-lg mb-2 md:mb-4">{selectedGame.title}</h1>
                     </div>
                 </div>
 
                 {/* Action Bar */}
-                <div className={`${theme.colors.card}/50 backdrop-blur-sm px-8 py-4 border-b ${theme.colors.border} flex items-center justify-between sticky top-0 z-20`}>
-                    <div className="flex items-center gap-4">
+                <div className={`${theme.colors.card}/50 backdrop-blur-sm px-4 md:px-8 py-4 border-b ${theme.colors.border} flex flex-col md:flex-row md:items-center justify-between sticky top-0 z-20 gap-4`}>
+                    <div className="flex items-center gap-3 md:gap-4 w-full md:w-auto">
                         {selectedGame.isInstalled ? (
                             <button 
                                 onClick={handlePlay}
-                                className="bg-green-600 hover:bg-green-500 text-white px-10 py-3 rounded text-lg font-bold shadow-lg transition transform hover:scale-105 flex items-center gap-2"
+                                className="bg-green-600 hover:bg-green-500 text-white px-6 md:px-10 py-2.5 md:py-3 rounded-lg md:rounded text-sm md:text-lg font-bold shadow-lg transition transform hover:scale-105 flex items-center justify-center gap-2 flex-1 md:flex-initial"
                             >
-                                <span className="text-xl"><FontAwesomeIcon icon={faPlay} /></span> PLAY
+                                <span className="text-lg md:text-xl"><FontAwesomeIcon icon={faPlay} /></span> PLAY
                             </button>
                         ) : (
                             <button 
                                 onClick={() => handleDownload(selectedGame.id)}
                                 disabled={downloadingId === selectedGame.id}
-                                className={`bg-blue-600 hover:bg-blue-500 text-white px-10 py-3 rounded text-lg font-bold shadow-lg transition transform hover:scale-105 flex items-center gap-2 ${downloadingId === selectedGame.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className={`bg-blue-600 hover:bg-blue-500 text-white px-6 md:px-10 py-2.5 md:py-3 rounded-lg md:rounded text-sm md:text-lg font-bold shadow-lg transition transform hover:scale-105 flex items-center justify-center gap-2 flex-1 md:flex-initial ${downloadingId === selectedGame.id ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
-                                <span className="text-xl">
+                                <span className="text-lg md:text-xl">
                                     <FontAwesomeIcon icon={downloadingId === selectedGame.id ? faRocket : faDownload} className={downloadingId === selectedGame.id ? 'animate-bounce' : ''} />
                                 </span> 
                                 {downloadingId === selectedGame.id ? `DOWNLOADING ${progress}%` : 'INSTALL'}
@@ -226,7 +245,7 @@ const Library = () => {
                         <div className="relative">
                             <button 
                                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                                className={`bg-gray-700 hover:bg-gray-600 text-gray-300 p-3 rounded shadow transition`}
+                                className={`bg-gray-700 hover:bg-gray-600 text-gray-300 p-2.5 md:p-3 rounded shadow transition`}
                             >
                                 <FontAwesomeIcon icon={faCog} size="lg" />
                             </button>
@@ -281,10 +300,10 @@ const Library = () => {
                 </div>
 
                 {/* Game Details / Feed */}
-                <div className="p-8 max-w-4xl">
-                    <div className={`${theme.colors.card} p-6 rounded-lg border ${theme.colors.border} mb-8`}>
-                        <h3 className={`text-xl font-bold ${theme.colors.text} mb-4 border-b ${theme.colors.border} pb-2`}>Activity</h3>
-                        <div className="flex gap-4">
+                <div className="p-4 md:p-8 max-w-4xl">
+                    <div className={`${theme.colors.card} p-4 md:p-6 rounded-lg border ${theme.colors.border} mb-8`}>
+                        <h3 className={`text-lg md:text-xl font-bold ${theme.colors.text} mb-4 border-b ${theme.colors.border} pb-2`}>Activity</h3>
+                        <div className="flex flex-col md:flex-row gap-4">
                             <div className="bg-black/20 p-4 rounded flex-1">
                                 <div className={`${theme.colors.accent} font-bold text-sm mb-1`}>ACHIEVEMENT UNLOCKED</div>
                                 <div className={`${theme.colors.text} font-medium`}>First Blood</div>

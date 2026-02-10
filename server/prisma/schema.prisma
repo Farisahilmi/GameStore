@@ -101,6 +101,7 @@ model Game {
   price           Decimal       @default(0)
   discount        Int           @default(0)
   imageUrl        String?
+  videoUrl        String?
   releaseDate     DateTime      @default(now())
   publisherId     Int?
   isEarlyAccess   Boolean       @default(false)

@@ -607,6 +607,9 @@ const AppContent = ({ user, setUser, refreshUser }) => {
         setLibrary(res.data.data.map(g => g.id));
     } catch (err) {
         console.error('Failed to fetch library for ownership check');
+        if (err.response && err.response.status === 401) {
+             logout();
+        }
     }
   };
 
@@ -715,7 +718,12 @@ const AppContent = ({ user, setUser, refreshUser }) => {
           setBuyNowGame(null);
           fetchLibrary(); // Refresh library after purchase
       } catch (err) {
-          toast.error(err.response?.data?.error || 'Purchase failed');
+          if (err.response && err.response.status === 401) {
+              toast.error('Session expired. Please login again.');
+              logout();
+          } else {
+              toast.error(err.response?.data?.error || 'Purchase failed');
+          }
       }
   };
 
@@ -737,7 +745,7 @@ const AppContent = ({ user, setUser, refreshUser }) => {
       }} />
       <div className={`${theme.colors.bg} min-h-screen ${theme.colors.text} font-sans flex flex-col relative transition-colors duration-500`}>
         {buyNowGame && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
                 <div className={`${theme.colors.card} border ${theme.colors.border} rounded-xl shadow-2xl max-w-md w-full p-6 animate-fadeIn`}>
                     <h3 className="text-2xl font-bold mb-4">{buyNowGame.recipientId ? 'Send Gift' : 'Confirm Purchase'}</h3>
                     <div className="flex gap-4 mb-6">
@@ -774,7 +782,7 @@ const AppContent = ({ user, setUser, refreshUser }) => {
             </div>
         )}
         {purchaseSuccessGame && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-fadeIn">
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-fadeIn">
                 <div className={`${theme.colors.card} border ${theme.colors.border} rounded-xl shadow-2xl max-w-lg w-full p-8 text-center`}>
                     <div className="text-green-500 text-6xl mb-6 scale-110">
                         <FontAwesomeIcon icon={faCheckCircle} />
@@ -876,6 +884,8 @@ const AppContent = ({ user, setUser, refreshUser }) => {
         {user && socket && <ChatSystem user={user} friends={friends} socket={socket} />}
         {user && <MobileBottomNav user={user} cartCount={cart.length} notifications={notifications} />}
       </div>
+      {/* Spacer for mobile bottom nav */}
+      {user && <div className="h-16 md:hidden"></div>}
     </>
   );
 };
@@ -895,6 +905,11 @@ const App = () => {
       localStorage.setItem('user', JSON.stringify(updatedUser));
     } catch (err) {
       console.error('Failed to refresh user', err);
+      if (err.response && err.response.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setUser(null);
+      }
     }
   };
 
